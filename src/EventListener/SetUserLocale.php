@@ -6,6 +6,7 @@ namespace App\EventListener;
 
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SetUserLocale
 {

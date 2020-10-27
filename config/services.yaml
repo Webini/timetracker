@@ -35,7 +35,7 @@ services:
 
     App\EventListener\SetUserLocale:
         tags:
-            - { name: kernel.event_listener, event: kernel.request }
+            - { name: kernel.event_listener, event: kernel.request, priority: 15 }
 
     App\EventListener\UserPasswordListener:
         class: App\EventListener\UserPasswordListener
