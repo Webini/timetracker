@@ -1,0 +1,6 @@
+api_auth_login_check:
+  path: /login
+
+api_auth_refresh_token:
+  path:     /refresh
+  defaults: { _controller: gesdinet.jwtrefreshtoken:refresh }

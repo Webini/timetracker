@@ -1,0 +1,55 @@
+# docker-compose.yml
+version: '2'
+
+services:
+    db:
+        image: postgres:9.6
+        volumes:
+            - ${STORAGE_PATH}/postgres:/var/lib/postgresql/data
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_DB: ${DB_NAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    app:
+        build:
+          context: .
+          args:
+             UUID: ${UUID}
+             GGID: ${GGID}
+        volumes:
+            - ./docker/php/www.dev.conf:/etc/php/7.4/fpm/pool.d/www.conf.env:ro
+            - ./docker/php/conf.d/20-xdebug.dev.ini:/etc/php/7.4/fpm/conf.d/20-xdebug.ini:ro
+            - ./:/var/app
+            - ./public:/var/app/public
+            - ${STORAGE_PATH}/upload:/var/upload
+        env_file:
+            - .env
+        environment:
+            DB_HOST: db
+        links:
+            - db
+
+    nginx:
+        image: nginx:1.19
+        ports:
+            - 80:80
+        entrypoint: '/var/www/entrypoint.sh'
+        command: 'nginx -g "daemon off;"'
+        environment:
+            DOCKER_USER: 'www-data'
+            DOCKER_GROUP: 'www-data'
+            LOCAL_USER_ID: ${UUID}
+            LOCAL_GROUP_ID: ${GGID}
+            GATEWAY_IP: 172.42.1.1
+            FRONT_PORT: 3000
+            FILE_MAX_SIZE: ${FILE_MAX_SIZE}
+        volumes:
+            - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+            - ./docker/nginx/conf.d/site.dev.conf:/etc/nginx/conf.d.env/default.conf:ro
+            - ./docker/nginx/entrypoint:/var/www
+            - ./public:/var/app/public
+        links:
+            - app

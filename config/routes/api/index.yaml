@@ -1,0 +1,7 @@
+api_auth:
+  resource: auth.yaml
+  prefix: /auth
+
+api_users:
+  resource: users.yaml
+  prefix: /users

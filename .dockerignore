@@ -1,0 +1,11 @@
+var/cache/*
+var/logs/*
+var/sessions/*
+node_modules
+bower_components
+Dockerfile
+docker
+docker-compose.yml
+docker-compose.dev.yml
+.data
+.env

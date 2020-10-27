@@ -1,0 +1,9 @@
+parameters:
+  env(JWT_REFRESH_TTL): 2592000
+
+gesdinet_jwt_refresh_token:
+  firewall: api
+  ttl: '%env(int:JWT_REFRESH_TTL)%'
+  ttl_update: true
+  user_identity_field: id
+  token_parameter_name: refreshToken

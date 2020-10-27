@@ -1,0 +1,7 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+api:
+  resource: routes/api/index.yaml
+  prefix: /api
