@@ -3,11 +3,17 @@
 namespace App\Entity;
 
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Gedmo\Mapping\Annotation as Gedmo;
+use App\Entity\TaskProvider;
+use App\Entity\Project;
 
 /**
  * @ORM\Entity() #repositoryClass="App\Repository\UserRepository"
@@ -17,12 +23,21 @@ use Gedmo\Mapping\Annotation as Gedmo;
  */
 class User implements \Serializable, UserInterface
 {
+    use TimestampableEntity;
+
     const ROLE_USER = 1;
+    const ROLE_PROJECT_MANAGER = 2;
     const ROLE_ADMIN = 128;
     const ROLE_SUPER_ADMIN = 256;
 
+    const BUNDLE_USER = self::ROLE_USER;
+    const BUNDLE_PROJECT_MANAGER = self::ROLE_USER | self::ROLE_PROJECT_MANAGER;
+    const BUNDLE_ADMIN = self::BUNDLE_PROJECT_MANAGER | self::ROLE_ADMIN;
+    const BUNDLE_SUPER_ADMIN = self::ROLE_ADMIN | self::ROLE_SUPER_ADMIN;
+
     const ROLES = [
         self::ROLE_USER => 'ROLE_USER',
+        self::ROLE_PROJECT_MANAGER => 'ROLE_PROJECT_MANAGER',
         self::ROLE_ADMIN => 'ROLE_ADMIN',
         self::ROLE_SUPER_ADMIN => 'ROLE_SUPER_ADMIN',
     ];
@@ -32,6 +47,7 @@ class User implements \Serializable, UserInterface
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Groups({ "user_full", "user_short" })
      */
     private $id;
 
@@ -39,6 +55,7 @@ class User implements \Serializable, UserInterface
      * @var string|null
      * @Assert\Email()
      * @ORM\Column(type="string", nullable=true, unique=true)
+     * @Groups({ "user_full" })
      */
     private $email;
 
@@ -51,6 +68,7 @@ class User implements \Serializable, UserInterface
     /**
      * @var bool|null
      * @ORM\Column(name="email_validated", type="boolean", options={"default"=false})
+     * @Groups({ "user_full" })
      */
     private $emailValidated;
 
@@ -58,6 +76,7 @@ class User implements \Serializable, UserInterface
      * @var string|null
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank()
+     * @Groups({ "user_full", "user_short" })
      */
     private $firstName;
 
@@ -65,35 +84,23 @@ class User implements \Serializable, UserInterface
      * @var string|null
      * @ORM\Column(type="string", nullable=true)
      * @Assert\NotBlank()
+     * @Groups({ "user_full", "user_short" })
      */
     private $lastName;
 
     /**
      * @var string|null
      * @ORM\Column(type="string", nullable=true)
+     * @Groups({ "user_full" })
      */
     private $phoneNumber;
 
     /**
      * @var integer
      * @ORM\Column(type="integer", name="roles", options={"unsigned": true, "default": 1})
+     * @Groups({ "user_full", "user_short" })
      */
     private $roles;
-
-    /**
-     * @var DateTime|null $updated
-     *
-     * @Gedmo\Timestampable(on="update")
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $updatedAt;
-
-    /**
-     * @var DateTime|null $updated
-     * @Gedmo\Timestampable(on="create")
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $createdAt;
 
     /**
      * @Assert\Length(groups={"password"}, min=6)
@@ -101,10 +108,22 @@ class User implements \Serializable, UserInterface
      */
     private $plainPassword;
 
+    /**
+     * @ORM\OneToMany(targetEntity=TaskProvider::class, mappedBy="owner", orphanRemoval=true)
+     */
+    private $taskProviders;
+
+    /**
+     * @ORM\OneToMany(targetEntity=AssignedProject::class, mappedBy="assigned", orphanRemoval=true)
+     */
+    private $assignedProjects;
+
     public function __construct()
     {
         $this->roles = self::ROLE_USER;
         $this->emailValidated = false;
+        $this->taskProviders = new ArrayCollection();
+        $this->assignedProjects = new ArrayCollection();
     }
 
     /** @see \Serializable::serialize() */
@@ -341,42 +360,6 @@ class User implements \Serializable, UserInterface
     }
 
     /**
-     * @return DateTime|null
-     */
-    public function getUpdatedAt() : ?DateTime
-    {
-        return $this->updatedAt;
-    }
-
-    /**
-     * @param DateTime|null $updatedAt
-     * @return $this
-     */
-    public function setUpdatedAt(?DateTime $updatedAt = null): self
-    {
-        $this->updatedAt = $updatedAt;
-        return $this;
-    }
-
-    /**
-     * @return null|DateTime
-     */
-    public function getCreatedAt(): ?DateTime
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * @param DateTime|null $createdAt
-     * @return User
-     */
-    public function setCreatedAt(?DateTime $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-        return $this;
-    }
-
-    /**
      * @return string
      */
     public function getFullName()
@@ -435,11 +418,73 @@ class User implements \Serializable, UserInterface
 
     public function getUsername()
     {
-        return $this->email;
+        return $this->getId();
     }
 
     public function eraseCredentials()
     {
         $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection|TaskProvider[]
+     */
+    public function getTaskProviders(): Collection
+    {
+        return $this->taskProviders;
+    }
+
+    public function addTaskProvider(TaskProvider $taskProvider): self
+    {
+        if (!$this->taskProviders->contains($taskProvider)) {
+            $this->taskProviders[] = $taskProvider;
+            $taskProvider->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTaskProvider(TaskProvider $taskProvider): self
+    {
+        if ($this->taskProviders->contains($taskProvider)) {
+            $this->taskProviders->removeElement($taskProvider);
+            // set the owning side to null (unless already changed)
+            if ($taskProvider->getOwner() === $this) {
+                $taskProvider->setOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|AssignedProject[]
+     */
+    public function getAssignedProjects(): Collection
+    {
+        return $this->assignedProjects;
+    }
+
+    public function addAssignedProject(AssignedProject $assignedProject): self
+    {
+        if (!$this->assignedProjects->contains($assignedProject)) {
+            $this->assignedProjects[] = $assignedProject;
+            $assignedProject->setAssigned($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAssignedProject(AssignedProject $assignedProject): self
+    {
+        if ($this->assignedProjects->contains($assignedProject)) {
+            $this->assignedProjects->removeElement($assignedProject);
+            // set the owning side to null (unless already changed)
+            if ($assignedProject->getAssigned() === $this) {
+                $assignedProject->setAssigned(null);
+            }
+        }
+
+        return $this;
     }
 }

@@ -6,7 +6,7 @@ lexik_jwt_authentication:
     public_key_path:  '%kernel.project_dir%/%env(JWT_PUBLIC_KEY_PATH)%'
 #    pass_phrase:      '%env(JWT_PASSPHRASE)%'
     token_ttl:        '%env(int:JWT_TTL)%'
-    user_identity_field: id
+    user_identity_field: username
     token_extractors:
         # look for a token as Authorization Header
         authorization_header:

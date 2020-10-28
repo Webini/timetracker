@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\AssignedProjectRepository;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity(repositoryClass=AssignedProjectRepository::class)
+ */
+class AssignedProject
+{
+    const PERMISSION_ADD_TASK = 1;
+    const PERMISSION_REMOVE_TASK = 2;
+    const PERMISSION_EDIT_TASK = 4;
+    const PERMISSION_PROJECT_ADMIN = 8;
+
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private $id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="assignedProjects")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $assigned;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Project::class, inversedBy="assignedProjects")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $project;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $permissions;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getAssigned(): ?User
+    {
+        return $this->assigned;
+    }
+
+    public function setAssigned(?User $assigned): self
+    {
+        $this->assigned = $assigned;
+
+        return $this;
+    }
+
+    public function getProject(): ?Project
+    {
+        return $this->project;
+    }
+
+    public function setProject(?Project $project): self
+    {
+        $this->project = $project;
+
+        return $this;
+    }
+
+    public function getPermissions(): ?int
+    {
+        return $this->permissions;
+    }
+
+    public function setPermissions(int $permissions): self
+    {
+        $this->permissions = $permissions;
+
+        return $this;
+    }
+
+    public function addPermission(int $permission): self
+    {
+        $this->permissions |= $permission;
+        return $this;
+    }
+
+    public function removePermission(int $permission): self
+    {
+        $this->permissions = $this->permissions ^ $permission;
+        return $this;
+    }
+
+    public function hasPermissions(int $permissions): bool
+    {
+        return ($this->permissions & $permissions) === $permissions;
+    }
+}

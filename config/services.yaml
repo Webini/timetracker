@@ -45,8 +45,8 @@ services:
             - { name: doctrine.orm.entity_listener, event: prePersist, entity: App\Entity\User }
             - { name: doctrine.orm.entity_listener, event: preUpdate, entity: App\Entity\User }
 
-    App\Normalizer\UserNormalizer:
-        class: App\Normalizer\UserNormalizer
+    App\Manager\UserManager:
+        class: App\Manager\UserManager
         autowire: true
         calls:
             - method: setJwtManager
@@ -55,6 +55,7 @@ services:
             - method: setRefreshTokenListener
               arguments:
                   - '@gesdinet.jwtrefreshtoken.send_token'
+
 
     App\EventListener\AuthenticationSuccessListener:
         class: App\EventListener\AuthenticationSuccessListener

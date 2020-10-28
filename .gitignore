@@ -22,3 +22,6 @@ config/jwt/*.pem
 .DS_Store
 .directory
 .env
+###> friends-of-behat/symfony-extension ###
+/behat.yml
+###< friends-of-behat/symfony-extension ###

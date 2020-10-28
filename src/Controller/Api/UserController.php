@@ -50,7 +50,11 @@ class UserController extends AbstractFOSRestController
 
             return $this
                 ->view($user)
-                ->setContext((new Context())->setAttribute('jwt', true))
+                ->setContext(
+                    (new Context())
+                        ->setAttribute('jwt', true)
+                        ->setGroups([ 'user_full' ])
+                )
             ;
         }
 

@@ -5,6 +5,7 @@ namespace App\Normalizer;
 
 
 use App\Entity\User;
+use App\Manager\UserManager;
 use Gesdinet\JWTRefreshTokenBundle\EventListener\AttachRefreshTokenOnSuccessListener;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
@@ -23,32 +24,17 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
     use SerializerAwareTrait;
 
     /**
-     * @var AttachRefreshTokenOnSuccessListener
+     * @var UserManager
      */
-    private $refreshTokenListener;
-    /**
-     * @var JWTManager
-     */
-    private $jwtManager;
+    private $userManager;
 
     /**
-     * @param JWTManager $jwtManager
-     * @return $this
+     * UserNormalizer constructor.
+     * @param UserManager $userManager
      */
-    public function setJwtManager(JWTManager $jwtManager): self
+    public function __construct(UserManager $userManager)
     {
-        $this->jwtManager = $jwtManager;
-        return $this;
-    }
-
-    /**
-     * @param AttachRefreshTokenOnSuccessListener $refreshTokenListener
-     * @return $this
-     */
-    public function setRefreshTokenListener(AttachRefreshTokenOnSuccessListener $refreshTokenListener): self
-    {
-        $this->refreshTokenListener = $refreshTokenListener;
-        return $this;
+        $this->userManager = $userManager;
     }
 
     /**
@@ -80,14 +66,12 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
      */
     private function retrieveTokens(User $user): array
     {
-        $token = $this->jwtManager->create($user);
-
-        $event = new AuthenticationSuccessEvent([], $user, new Response());
-        $this->refreshTokenListener->attachRefreshToken($event);
+        $token = $this->userManager->getJwt($user);
+        $refreshToken = $this->userManager->getRefreshToken($user);
 
         return [
             'token' => $token,
-            'refreshToken' => $event->getData()['refreshToken']
+            'refreshToken' => $refreshToken,
         ];
     }
 

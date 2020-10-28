@@ -4,10 +4,6 @@ version: '2'
 services:
     db:
         image: postgres:9.6
-        volumes:
-            - ${STORAGE_PATH}/postgres:/var/lib/postgresql/data
-        ports:
-            - 5432:5432
         environment:
             POSTGRES_USER: ${DB_USER}
             POSTGRES_DB: ${DB_NAME}
@@ -24,11 +20,11 @@ services:
             - ./docker/php/conf.d/20-xdebug.dev.ini:/etc/php/7.4/fpm/conf.d/20-xdebug.ini:ro
             - ./:/var/app
             - ./public:/var/app/public
-            - ${STORAGE_PATH}/upload:/var/upload
         env_file:
             - .env
         environment:
             DB_HOST: db
+            APP_ENV: test
         links:
             - db
 

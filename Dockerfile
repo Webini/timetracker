@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --force-yes wget apt-transport-https &&
 RUN apt-get update && apt-get install -y --force-yes \
     git gettext-base unzip curl php7.4-cli php7.4-apcu php7.4-curl php7.4-fpm php7.4-curl php7.4-gd php7.4-intl php7.4-mbstring \
     php7.4-pgsql php7.4-pdo-pgsql php7.4-xml php7.4-xdebug gosu apt-transport-https lsb-release ca-certificates \
-    libfontconfig1 libxrender1 php7.4-zip
+    libfontconfig1 libxrender1 php7.4-zip inotify-tools
 
 
 RUN sed -i".back" s/\;date\.timezone\ \=.*/date\.timezone\ \=\ Europe\\/Paris/ /etc/php/7.4/fpm/php.ini && \
@@ -27,9 +27,7 @@ RUN sed -i".back" s/\;date\.timezone\ \=.*/date\.timezone\ \=\ Europe\\/Paris/ /
 
 ARG RELEASE_TAG
 ENV RELEASE=$RELEASE_TAG
-ADD . /var/app
-
-RUN mkdir -p /var/app/var/{cache,log} && chown -R $USER. /var/app
+COPY --chown=web:web . /var/app
 
 USER $USER
 
