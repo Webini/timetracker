@@ -6,10 +6,13 @@ namespace App\Normalizer;
 
 use App\Entity\User;
 use App\Manager\UserManager;
+use App\Security\Voter\UserVoter;
 use Gesdinet\JWTRefreshTokenBundle\EventListener\AttachRefreshTokenOnSuccessListener;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Serializer\Exception\CircularReferenceException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
@@ -29,11 +32,29 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
     private $userManager;
 
     /**
+     * @var AuthorizationCheckerInterface
+     */
+    private $authorizationChecker;
+
+    /**
+     * @var TokenStorageInterface
+     */
+    private $tokenStorage;
+
+    /**
      * UserNormalizer constructor.
      * @param UserManager $userManager
+     * @param TokenStorageInterface $tokenStorage
+     * @param AuthorizationCheckerInterface $authorizationChecker
      */
-    public function __construct(UserManager $userManager)
+    public function __construct(
+        UserManager $userManager,
+        TokenStorageInterface $tokenStorage,
+        AuthorizationCheckerInterface $authorizationChecker
+    )
     {
+        $this->tokenStorage = $tokenStorage;
+        $this->authorizationChecker = $authorizationChecker;
         $this->userManager = $userManager;
     }
 
@@ -51,8 +72,17 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
         }
 
         $context[self::class] = true;
-        $data = $this->serializer->normalize($object, $format, $context);
 
+        if (empty($context['groups'])) {
+            $token = $this->tokenStorage->getToken();
+            if ($token && $this->authorizationChecker->isGranted(UserVoter::USER_FULL_DATA, $object)) {
+                $context['groups'] = [ 'user_full' ];
+            } else {
+                $context['groups'] = [ 'user_short' ];
+            }
+        }
+
+        $data = $this->serializer->normalize($object, $format, $context);
         if (isset($context['jwt']) && $context['jwt']) {
             $data = array_merge($this->retrieveTokens($object), $data);
         }

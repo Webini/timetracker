@@ -22,7 +22,7 @@ trait RootFormFactoryTrait
      * @param FormFactoryInterface $formFactory
      * @return $this
      */
-    public function setFormFactory(FormFactoryInterface $formFactory)
+    public function setFormFactory(FormFactoryInterface $formFactory): self
     {
         $this->formFactory = $formFactory;
         return $this;
@@ -34,7 +34,7 @@ trait RootFormFactoryTrait
      * @param array $options
      * @return FormInterface
      */
-    protected function createRootForm($type, $data = null, array $options = array())
+    protected function createRootForm($type, $data = null, array $options = array()): FormInterface
     {
         return $this->formFactory->createNamed('', $type, $data, $options);
     }
@@ -45,7 +45,7 @@ trait RootFormFactoryTrait
      * @param bool $clearMissing
      * @return FormInterface
      */
-    protected function submitForm(FormInterface $form, Request $request, bool $clearMissing = true)
+    protected function submitRequestContent(FormInterface $form, Request $request, bool $clearMissing = true): FormInterface
     {
         $data = null;
         $contentType = $request->getContentType();
@@ -68,11 +68,23 @@ trait RootFormFactoryTrait
     }
 
     /**
+     * @param FormInterface $form
+     * @param Request $request
+     * @param bool $clearMissing
+     * @return FormInterface
+     */
+    protected function submitRequestQuery(FormInterface $form, Request $request, bool $clearMissing = true): FormInterface
+    {
+        return $form->submit($request->query->all(), $clearMissing);
+    }
+
+    /**
      * Replace boolean by 1 or 0 in order to avoid symfony form data cast to string
      * @param mixed $data
      * @return array|int
      */
-    private function replaceBooleans($data) {
+    private function replaceBooleans($data)
+    {
         if (is_array($data)) {
             $output = [];
 

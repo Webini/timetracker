@@ -16,7 +16,7 @@ use App\Entity\TaskProvider;
 use App\Entity\Project;
 
 /**
- * @ORM\Entity() #repositoryClass="App\Repository\UserRepository"
+ * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
  * @ORM\HasLifecycleCallbacks()
  * @UniqueEntity("email")

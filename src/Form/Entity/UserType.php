@@ -50,10 +50,13 @@ class UserType extends AbstractType
         $builder
             ->add('firstName', TextType::class)
             ->add('lastName', TextType::class)
-            ->add('plainPassword', TextType::class, [ 'constraints' => new NotBlank() ])
             ->add('phoneNumber', TelType::class)
             ->add('email', EmailType::class, [ 'constraints' => new NotBlank() ])
         ;
+
+        if ($options['with_password']) {
+            $builder->add('plainPassword', TextType::class, [ 'constraints' => new NotBlank() ]);
+        }
 
         $token = $this->tokenStorage->getToken();
         if (!$token) {
@@ -80,7 +83,10 @@ class UserType extends AbstractType
             'data_class' => User::class,
             'csrf_protection' => false,
             'allow_extra_fields' => false,
+            'with_password' => false
         ]);
+
+        $resolver->addAllowedTypes('with_password', [ 'boolean', 'null' ]);
     }
 
 }

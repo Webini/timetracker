@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Form\Entity\UserType;
+use App\Form\Model\UserSearchType;
 use App\Manager\UserManager;
 use App\Security\Voter\UserVoter;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,7 +41,10 @@ class UserController extends AbstractFOSRestController
         $form = $this->createForm(
             UserType::class,
             null,
-            [ 'validation_groups' => [ 'password', 'Default' ] ]
+            [
+                'with_password' => true,
+                'validation_groups' => [ 'password', 'Default' ]
+            ]
         );
 
         $this->submitForm($form, $request);
@@ -64,11 +68,60 @@ class UserController extends AbstractFOSRestController
 
     /**
      * @param Request $request
+     * @param User $user
+     * @return View
+     */
+    public function update(Request $request, User $user): View
+    {
+        $this->denyAccessUnlessGranted(UserVoter::USER_EDIT, $user);
+        $form = $this->createForm(UserType::class, $user);
+
+        $this->submitRequestContent($form, $request, false);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->em->flush();
+
+            return $this
+                ->view($user)
+                ->setContext((new Context())->setGroups([ 'user_full' ]))
+            ;
+        }
+
+        return $this->view($form);
+    }
+
+    /**
+     * @param Request $request
      * @return View
      */
     public function createLogged(Request $request): View
     {
         $this->denyAccessUnlessGranted(UserVoter::USER_CREATE);
         return $this->create($request);
+    }
+
+    /**
+     * @param User $user
+     * @return View
+     */
+    public function getOne(User $user): View
+    {
+        return $this->view($user);
+    }
+
+    /**
+     * @param Request $request
+     * @return View
+     */
+    public function search(Request $request): View
+    {
+        $form = $this->createForm(UserSearchType::class, null, [ 'method' => 'GET' ]);
+        $this->submitRequestQuery($form, $request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $repo = $this->em->getRepository(User::class);
+            return $this->view($repo->search($form->getData()));
+        }
+
+        return $this->view($form);
     }
 }

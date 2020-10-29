@@ -24,6 +24,25 @@ final class ApiContext implements Context
     use UserTrait;
     use RouterAwareTrait;
 
+    const ASSERT_MAP = [
+        'should' => [
+            'contains' => 'assertContains',
+            'be greater than' => 'assertGreaterThan',
+            'be greater than or equal to' => 'assertGreaterThanOrEqual',
+            'be equal to' => 'assertEquals',
+            'be less than' => 'assertLessThan',
+            'be less than or equal to' => 'assertLessThanOrEqual',
+        ],
+        'should not' => [
+            'contains' => 'assertNotContains',
+            'be greater than' => 'assertNotGreaterThan',
+            'be greater than or equal to' => 'assertNotGreaterThanOrEqual',
+            'be equal to' => 'assertNotEquals',
+            'be less than' => 'assertNotLessThan',
+            'be less than or equal to' => 'assertNotLessThanOrEqual',
+        ]
+    ];
+
     /**
      * @var KernelInterface
      */
@@ -49,158 +68,170 @@ final class ApiContext implements Context
      */
     private $requestStack;
 
+    /**
+     * @var PropertyAccessor
+     */
+    private $accessor;
+
     public function __construct(KernelInterface $kernel, RequestStack $requestStack)
     {
         $this->kernel = $kernel;
         $this->requestStack = $requestStack;
-        $this->user = null;
-        $this->bucket = [];
-        $this->accessor = PropertyAccess::createPropertyAccessorBuilder()
+        $this->bucket = [ 'user' => null ];
+        $this->strictAccessor = PropertyAccess::createPropertyAccessorBuilder()
             ->enableExceptionOnInvalidIndex()
             ->enableExceptionOnInvalidPropertyPath()
             ->getPropertyAccessor()
         ;
+        $this->accessor = PropertyAccess::createPropertyAccessor();
     }
 
     /**
-     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.]+)$/
+     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.?]+)$/
      * @param string $method
      * @param string $route
      * @throws \Exception
      */
     public function iSendToRoute(string $method, string $route): void
     {
-        $this->iSendToRouteWithParameters($method, $route);
-    }
+        $hasRouteParams = $this->strictAccessor->isReadable($this->bucket, '[route][params]');
+        $route = $this->router->generate(
+            $route,
+            $hasRouteParams ? $this->strictAccessor->getValue($this->bucket, '[route][params]') : []
+        );
 
-    /**
-     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.?]+) with parameters:$/
-     * @param string $method
-     * @param string $route
-     * @param PyStringNode|null $strParameters
-     * @throws \Exception
-     */
-    public function iSendToRouteWithParameters(string $method, string $route, ?PyStringNode $strParameters = null): void
-    {
-        $parameters = [];
-        if ($strParameters != null) {
-            $parameters = json_decode($strParameters->getRaw(), true);
-        }
-
-        $route = $this->router->generate($route, $parameters);
-        $hasContent = isset($this->bucket['content']);
+        $hasContent = $this->strictAccessor->isReadable($this->bucket, '[request][content]');
         $request = Request::create(
             $route,
             $method,
-            isset($this->bucket['parameters']) ? $this->bucket['parameters'] : [],
-            [], [], [],
-            $hasContent ? json_encode($this->bucket['content']) : null
+            $this->accessor->getValue($this->bucket, '[request][parameters]') ?? [],
+            $this->accessor->getValue($this->bucket, '[request][cookies]') ?? [],
+            $this->accessor->getValue($this->bucket, '[request][files]') ?? [],
+            $this->accessor->getValue($this->bucket, '[request][server]') ?? [],
+            $hasContent ? json_encode($this->strictAccessor->getValue($this->bucket, '[request][content]')) : null
         );
 
         if ($hasContent) {
             $request->headers->set('content-type', 'application/json');
         }
 
-        if (isset($this->bucket['headers'])) {
-            foreach ($this->bucket['headers'] as $key => $value) {
+        if ($this->strictAccessor->isReadable($this->bucket, '[request][headers]')) {
+            $headers = $this->strictAccessor->getValue($this->bucket, '[request][headers]');
+            foreach ($headers as $key => $value) {
                 $request->headers->set($key, $value);
             }
         }
 
-        if ($this->user !== null) {
-            $request->headers->set('X-Authorization', $this->userManager->getJwt($this->user));
+        if ($this->bucket['user'] !== null) {
+            $request->headers->set('X-Authorization', $this->userManager->getJwt($this->bucket['user']));
         }
 
         $this->response = $this->kernel->handle($request);
     }
 
     /**
-     * @When /^i am an user of type (.+)$/
+     * @When /^i am an user of type (admin|super admin|project manager|user)$/
      * @param string $type
      */
     public function iAmAnUserOfType(string $type): void
     {
-        $this->user = $this->getUserByType($type);
-        if ($this->user === null) {
-            throw new \RuntimeException('Cannot found user of type ' . $type);
-        }
+        $this->bucket['user'] = $this->getUserByType($type);
     }
 
     /**
-     * @When /^i add to (content|parameters|headers) a key ([a-zA-Z0-9\-_\.]+) with my jwt value$/
+     * @When /^an user of type (admin|super admin|project manager|user) saved in (.+)$/
+     * @param string $type
+     * @param string $path
+     */
+    public function addFakeUser(string $type, string $path): void
+    {
+        $user = $this->createFakeUserByType($type);
+        $this->accessor->setValue($this->bucket, $path, $user);
+    }
+
+    /**
+     * @When /^i set my jwt value to (.+)$/
      * @param string $bucket
      * @param string $key
      */
-    public function iAddJwtTo(string $bucket, string $key): void
+    public function iSetMyJwtTo(string $path): void
     {
-        if ($this->user === null) {
+        if ($this->bucket['user'] === null) {
             throw new RuntimeException('No user selected');
         }
 
-        $this->iAddToValueWithCast($bucket, $key, null, $this->userManager->getJwt($this->user));
+        $this->accessor->setValue(
+            $this->bucket, $path,
+            $this->userManager->getJwt($this->bucket['user'])
+        );
     }
 
     /**
-     * @When /^i add to (content|parameters|headers) a key ([a-zA-Z0-9\-_\.]+) with my refresh token value$/
-     * @param string $bucket
-     * @param string $key
+     * @When /^i set my refresh token value to (.+)$/
+     * @param string $path
      */
-    public function iAddRefreshTokenTo(string $bucket, string $key): void
+    public function iSetMyRefreshTokenTo( string $path): void
     {
-        if ($this->user === null) {
+        if ($this->bucket['user'] === null) {
             throw new RuntimeException('No user selected');
         }
 
         $this->requestStack->push(Request::create('/'));
-        $this->iAddToValueWithCast($bucket, $key, null, $this->userManager->getRefreshToken($this->user));
+        $this->accessor->setValue(
+            $this->bucket, $path,
+            $this->userManager->getRefreshToken($this->bucket['user'])
+        );
         $this->requestStack->pop();
     }
 
     /**
-     * @When /^i add to (content|parameters|headers) a key ([a-zA-Z0-9\-_\.]+) with value (.+)$/
-     * @param string $bucket
-     * @param string $key
-     * @param string $value
+     * @When /^i set to ([^\s]+) the value of ([^\s]+)$/
+     * @param string $path
+     * @param string $valuePath
      */
-    public function iAddValueTo(string $bucket, string $key, string $value): void
+    public function iSetValueWithValue(string $path, string $valuePath): void
     {
-        $this->iAddToValueWithCast($bucket, $key, null, $value);
+        $readable = $this->strictAccessor->isReadable($this->bucket, $valuePath);
+        if (!$readable) {
+            throw new \RuntimeException('Cannot read value ' . $valuePath);
+        }
+        $value = $this->strictAccessor->getValue($this->bucket, $valuePath);
+        $this->accessor->setValue($this->bucket, $path, $value);
     }
 
     /**
-     * @When /^i add to (content|parameters|headers) a key ([a-zA-Z0-9\-_\.]+) with ((boolean|bool|integer|int|float|double|string|null)?) value (.+)$/
-     * @param string $bucket
-     * @param string $key
-     * @param string|null $cast
+     * @When /^i set to ([^\s]+) value (.+)$/
      * @param string $value
+     * @param string $path
      */
-    public function iAddToValueWithCast(string $bucket, string $key, ?string $cast, string $value): void
+    public function iSetValue(string $path, string $value): void
     {
-        if (!isset($this->bucket[$bucket])) {
-            $this->bucket[$bucket] = [];
-        }
-
-        $this->bucket[$bucket][$key] = $value;
-        if ($cast !== null) {
-            settype($this->bucket[$bucket][$key], $cast);
-        }
+        $this->accessor->setValue($this->bucket, $path, $this->jsonDecode($value));
     }
 
     /**
-     * @When /^i add to (content|parameters|headers) values:$/
-     * @param string $bucket
+     * @When /^i set to ([^\s]+) values:$/
+     * @param string $path
      * @param PyStringNode $content
      */
-    public function iAddToValues(string $bucket, PyStringNode $content): void
+    public function iSetValuesTo(string $path, PyStringNode $content): void
     {
-        if (!isset($this->bucket[$bucket])) {
-            $this->bucket[$bucket] = [];
-        }
+        $this->iSetValue($path, $content->getRaw());
+    }
 
-        $this->bucket[$bucket] = array_merge(
-            $this->bucket[$bucket],
-            json_decode($content->getRaw(), true)
-        );
+    /**
+     * @param string $data
+     * @return mixed
+     */
+    private function jsonDecode(string $data)
+    {
+        $result = json_decode($data, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                sprintf('%s (%s), don\'t forget to use json synthax', json_last_error_msg(), $data)
+            );
+        }
+        return $result;
     }
 
     /**
@@ -242,7 +273,8 @@ final class ApiContext implements Context
 
     /**
      * @Then /^the response (should|should not) have keys (.+)$/
-     * @param $keys
+     * @param string $condition
+     * @param string $keys
      */
     public function theResponseShouldOrShouldNotHaveKeys(string $condition, string $keys): void
     {
@@ -251,11 +283,11 @@ final class ApiContext implements Context
         $condition = strtolower($condition);
         foreach ($keys as $key) {
             $key = trim($key);
-            $readable = $this->accessor->isReadable($content, $key);
+            $readable = $this->strictAccessor->isReadable($content, $key);
             if (($condition === 'should' && !$readable) ||
                 ($condition === 'should not' && $readable)) {
                 throw new \RuntimeException(sprintf(
-                    'The key %s %s present in response %s',
+                    'The key %s %s be present in response %s',
                     $key,
                     $condition,
                     var_export($content, true)
@@ -265,19 +297,14 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response item (.+?) (should|should not) be (.+?)$/
+     * @Then /^the response item ([^\s]+) (should|should not) be empty$/
+     * @param string $key
+     * @param string $condition
      */
-    public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $expected): void
+    public function theResponseItemShouldOrShouldNotBeEmpty(string $key, string $condition)
     {
-        $expected = json_decode($expected, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException(
-                sprintf('Cannot parse expected value (%s), don\'t forget to use json synthax', json_last_error_msg())
-            );
-        }
-
         $content = $this->getResponseContent();
-        if (!$this->accessor->isReadable($content, $key)) {
+        if (!$this->strictAccessor->isReadable($content, $key)) {
             throw new \RuntimeException(sprintf(
                 'Cannot found element %s in response %s',
                 $key,
@@ -285,15 +312,39 @@ final class ApiContext implements Context
             ));
         }
 
-        $value = $this->accessor->getValue($content, $key);
+        $value = $this->strictAccessor->getValue($content, $key);
         $condition = strtolower($condition);
 
         if ($condition === 'should') {
-            Assert::assertEquals($expected, $value);
+            Assert::assertEmpty($value);
+        } else if ($condition === 'should not') {
+            Assert::assertNotEmpty($value);
+        } else {
+            throw new \RuntimeException('Invalid condition');
         }
-        if ($condition === 'should not') {
-            Assert::assertNotEquals($expected, $value);
+    }
+
+    /**
+     * @Then /^the response item ([^\s]+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to) (.+?)$/
+     */
+    public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $assertExpr, string $expected): void
+    {
+        $expected = $this->jsonDecode($expected);
+
+        $content = $this->getResponseContent();
+        if (!$this->strictAccessor->isReadable($content, $key)) {
+            throw new \RuntimeException(sprintf(
+                'Cannot found element %s in response %s',
+                $key,
+                var_export($content, true)
+            ));
         }
+
+        $value = $this->strictAccessor->getValue($content, $key);
+        $condition = strtolower($condition);
+
+        $assert = $this->strictAccessor->getValue(self::ASSERT_MAP, '[' . $condition . '][' . $assertExpr . ']');
+        Assert::$assert($expected, $value);
     }
 
     /**
@@ -301,12 +352,7 @@ final class ApiContext implements Context
      */
     private function getResponseContent()
     {
-        $content = $this->response->getContent();
-        $parsedContent = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException(sprintf('Cannot parse content %s', json_last_error_msg()));
-        }
-        return $parsedContent;
+        return $this->jsonDecode($this->response->getContent());
     }
 
 }

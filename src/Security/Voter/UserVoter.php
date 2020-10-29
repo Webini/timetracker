@@ -13,12 +13,16 @@ class UserVoter extends Voter
     const USER_CREATE_PROJECT_MANAGER = 'USER_CREATE_PROJECT_MANAGER';
     const USER_CREATE_ADMIN = 'USER_CREATE_ADMIN';
     const USER_CREATE_SUPER_ADMIN = 'USER_CREATE_SUPER_ADMIN';
+    const USER_EDIT = 'USER_EDIT';
+    const USER_FULL_DATA = 'USER_FULL_DATA';
 
     const ALL_ATTRIBUTES = [
         self::USER_CREATE,
         self::USER_CREATE_PROJECT_MANAGER,
         self::USER_CREATE_ADMIN,
         self::USER_CREATE_SUPER_ADMIN,
+        self::USER_EDIT,
+        self::USER_FULL_DATA,
     ];
 
     const ATTRIBUTES_WITHOUT_SUBJECT = [
@@ -68,7 +72,48 @@ class UserVoter extends Voter
             return $this->canCreateSuperAdmin($user);
         }
 
+        if ($attribute === self::USER_EDIT) {
+            return $this->canEdit($user, $subject);
+        }
+
+        if ($attribute === self::USER_FULL_DATA) {
+            return $this->canSeeFullData($user, $subject);
+        }
+
         return false;
+    }
+
+    /**
+     * Only Admin, SuperAdmin, PM and ourself can see full infos
+     * @param User $user
+     * @param User $other
+     * @return bool
+     */
+    public function canSeeFullData(User $user, User $other): bool
+    {
+        if ($user->getId() === $other->getId()) {
+            return true;
+        }
+
+        return $user->hasOneRole(User::ROLE_SUPER_ADMIN | User::ROLE_ADMIN | User::ROLE_PROJECT_MANAGER);
+    }
+
+    /**
+     * User can edit an other user only if he is administrator and his
+     * roles are superior to the other user's roles
+     * @param User $user
+     * @param User $other
+     * @return bool
+     */
+    public function canEdit(User $user, User $other): bool
+    {
+        if ($user->getId() === $other->getId() ||
+            $user->hasRole(User::ROLE_SUPER_ADMIN)) {
+            return true;
+        }
+
+        return $user->hasOneRole(User::ROLE_ADMIN) &&
+            !$other->hasOneRole(User::ROLE_ADMIN | User::ROLE_SUPER_ADMIN);
     }
 
     /**

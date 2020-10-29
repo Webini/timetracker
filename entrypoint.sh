@@ -41,12 +41,12 @@ elif [[ "$1" == "behat" ]]; then
       (
           sleep 1
           gosu web ./bin/console doctrine:fixtures:load -q
-          gosu web ./vendor/bin/behat ${ARGUMENTS[@]} < /dev/null
+          gosu web ./vendor/bin/behat ${ARGUMENTS[@]} --strict < /dev/null
       )&
     done
   else
     ARGUMENTS+=( ${@:2} )
-    gosu web ./vendor/bin/behat ${ARGUMENTS[@]} < /dev/null
+    gosu web ./vendor/bin/behat ${ARGUMENTS[@]} --strict < /dev/null
   fi
   exit
 fi
