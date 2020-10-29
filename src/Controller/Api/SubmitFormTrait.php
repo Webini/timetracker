@@ -10,35 +10,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
-trait RootFormFactoryTrait
+trait SubmitFormTrait
 {
-    /**
-     * @var FormFactoryInterface
-     */
-    protected $formFactory;
-
-    /**
-     * @required
-     * @param FormFactoryInterface $formFactory
-     * @return $this
-     */
-    public function setFormFactory(FormFactoryInterface $formFactory): self
-    {
-        $this->formFactory = $formFactory;
-        return $this;
-    }
-
-    /**
-     * @param string|FormInterface $type
-     * @param null $data
-     * @param array $options
-     * @return FormInterface
-     */
-    protected function createRootForm($type, $data = null, array $options = array()): FormInterface
-    {
-        return $this->formFactory->createNamed('', $type, $data, $options);
-    }
-
     /**
      * @param FormInterface $form
      * @param Request $request

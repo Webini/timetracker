@@ -33,7 +33,7 @@ class AssignedProjectRepository extends ServiceEntityRepository
             ->createQueryBuilder('a')
             ->where('a.project = :project')
             ->setParameter('project', $project)
-            ->andWhere('a.assigned = :user')
+            ->andWhere('a.assignedUsers = :user')
             ->setParameter('user', $user)
             ->getQuery()
             ->getSingleResult()

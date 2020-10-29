@@ -29,7 +29,7 @@ class AssignedProject
     private $assigned;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Project::class, inversedBy="assignedProjects")
+     * @ORM\ManyToOne(targetEntity=Project::class, inversedBy="assignedUsers")
      * @ORM\JoinColumn(nullable=false)
      */
     private $project;

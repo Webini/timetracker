@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Blameable\Traits\BlameableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @ORM\Entity(repositoryClass=ProjectRepository::class)
@@ -32,19 +33,12 @@ class Project
     private $name;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="ownedProjects")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $owner;
-
-    /**
      * @ORM\ManyToOne(targetEntity=TaskProvider::class, inversedBy="ownedProjects")
      */
     private $taskProvider;
 
     /**
      * @ORM\Column(type="guid", unique=true)
-     * @ORM\GeneratedValue(strategy="UUID")
      */
     private $guid;
 
@@ -61,12 +55,13 @@ class Project
     /**
      * @ORM\OneToMany(targetEntity=AssignedProject::class, mappedBy="project", orphanRemoval=true)
      */
-    private $assignedProjects;
+    private $assignedUsers;
 
     public function __construct()
     {
+        $this->guid = Uuid::v4();
         $this->tasks = new ArrayCollection();
-        $this->assignedProjects = new ArrayCollection();
+        $this->assignedUsers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -82,18 +77,6 @@ class Project
     public function setName(string $name): self
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getOwner(): ?User
-    {
-        return $this->owner;
-    }
-
-    public function setOwner(User $owner): self
-    {
-        $this->owner = $owner;
 
         return $this;
     }
@@ -168,25 +151,25 @@ class Project
     /**
      * @return Collection|AssignedProject[]
      */
-    public function getAssignedProjects(): Collection
+    public function getAssignedUsers(): Collection
     {
-        return $this->assignedProjects;
+        return $this->assignedUsers;
     }
 
-    public function addAssignedProject(AssignedProject $assignedProject): self
+    public function addAssignedUser(AssignedProject $assignedProject): self
     {
-        if (!$this->assignedProjects->contains($assignedProject)) {
-            $this->assignedProjects[] = $assignedProject;
+        if (!$this->assignedUsers->contains($assignedProject)) {
+            $this->assignedUsers[] = $assignedProject;
             $assignedProject->setProject($this);
         }
 
         return $this;
     }
 
-    public function removeAssignedProject(AssignedProject $assignedProject): self
+    public function removeAssignedUser(AssignedProject $assignedProject): self
     {
-        if ($this->assignedProjects->contains($assignedProject)) {
-            $this->assignedProjects->removeElement($assignedProject);
+        if ($this->assignedUsers->contains($assignedProject)) {
+            $this->assignedUsers->removeElement($assignedProject);
             // set the owning side to null (unless already changed)
             if ($assignedProject->getProject() === $this) {
                 $assignedProject->setProject(null);

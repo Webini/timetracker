@@ -8,6 +8,12 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
+
+    role_hierarchy:
+        ROLE_PROJECT_MANAGER: ROLE_USER
+        ROLE_ADMIN: ROLE_PROJECT_MANAGER
+        ROLE_SUPER_ADMIN: [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/

@@ -3,16 +3,15 @@
 
 namespace App\Tests\Behat;
 
-use App\DataFixtures\UserFixtures;
+use App\Traits\EntityManagerAwareTrait;
 use App\Entity\User;
+use App\Tests\Behat\Traits\ProjectTrait;
 use App\Tests\Behat\Traits\RouterAwareTrait;
 use App\Tests\Behat\Traits\UserTrait;
 use Behat\Behat\Context\Context;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Gherkin\Node\PyStringNode;
 use http\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -21,8 +20,10 @@ use PHPUnit\Framework\Assert;
 
 final class ApiContext implements Context
 {
-    use UserTrait;
     use RouterAwareTrait;
+    use EntityManagerAwareTrait;
+    use UserTrait;
+    use ProjectTrait;
 
     const ASSERT_MAP = [
         'should' => [
@@ -61,22 +62,16 @@ final class ApiContext implements Context
     /**
      * @var array
      */
-    private $bucket;
-
-    /**
-     * @var RequestStack
-     */
-    private $requestStack;
+    private $bucket = [];
 
     /**
      * @var PropertyAccessor
      */
     private $accessor;
 
-    public function __construct(KernelInterface $kernel, RequestStack $requestStack)
+    public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;
-        $this->requestStack = $requestStack;
         $this->bucket = [ 'user' => null ];
         $this->strictAccessor = PropertyAccess::createPropertyAccessorBuilder()
             ->enableExceptionOnInvalidIndex()
@@ -127,61 +122,6 @@ final class ApiContext implements Context
         }
 
         $this->response = $this->kernel->handle($request);
-    }
-
-    /**
-     * @When /^i am an user of type (admin|super admin|project manager|user)$/
-     * @param string $type
-     */
-    public function iAmAnUserOfType(string $type): void
-    {
-        $this->bucket['user'] = $this->getUserByType($type);
-    }
-
-    /**
-     * @When /^an user of type (admin|super admin|project manager|user) saved in (.+)$/
-     * @param string $type
-     * @param string $path
-     */
-    public function addFakeUser(string $type, string $path): void
-    {
-        $user = $this->createFakeUserByType($type);
-        $this->accessor->setValue($this->bucket, $path, $user);
-    }
-
-    /**
-     * @When /^i set my jwt value to (.+)$/
-     * @param string $bucket
-     * @param string $key
-     */
-    public function iSetMyJwtTo(string $path): void
-    {
-        if ($this->bucket['user'] === null) {
-            throw new RuntimeException('No user selected');
-        }
-
-        $this->accessor->setValue(
-            $this->bucket, $path,
-            $this->userManager->getJwt($this->bucket['user'])
-        );
-    }
-
-    /**
-     * @When /^i set my refresh token value to (.+)$/
-     * @param string $path
-     */
-    public function iSetMyRefreshTokenTo( string $path): void
-    {
-        if ($this->bucket['user'] === null) {
-            throw new RuntimeException('No user selected');
-        }
-
-        $this->requestStack->push(Request::create('/'));
-        $this->accessor->setValue(
-            $this->bucket, $path,
-            $this->userManager->getRefreshToken($this->bucket['user'])
-        );
-        $this->requestStack->pop();
     }
 
     /**

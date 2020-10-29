@@ -7,29 +7,36 @@ namespace App\Tests\Behat\Traits;
 use App\DataFixtures\UserFixtures;
 use App\Entity\User;
 use App\Manager\UserManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Faker\Factory;
+use http\Exception\RuntimeException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 trait UserTrait
 {
-    /**
-     * @var EntityManagerInterface|null
-     */
-    protected $em;
-
     /**
      * @var UserManager|null
      */
     protected $userManager;
 
     /**
+     * @var RequestStack
+     */
+    private $requestStack;
+
+    /**
+     * @var array
+     */
+    private $bucket = [];
+
+    /**
      * @required
-     * @param EntityManagerInterface $em
+     * @param RequestStack $requestStack
      * @return $this
      */
-    public function setEntityManager(EntityManagerInterface $em)
+    public function setRequestStack(RequestStack $requestStack): self
     {
-        $this->em = $em;
+        $this->requestStack = $requestStack;
         return $this;
     }
 
@@ -38,7 +45,7 @@ trait UserTrait
      * @param UserManager $userManager
      * @return $this
      */
-    public function setUserManager(UserManager $userManager)
+    public function setUserManager(UserManager $userManager): self
     {
         $this->userManager = $userManager;
         return $this;
@@ -48,7 +55,7 @@ trait UserTrait
      * @param string $email
      * @return User|null
      */
-    protected function findOneUserByMail(string $email): ?User
+    private function findOneUserByMail(string $email): ?User
     {
         return $this->em
             ->getRepository(User::class)
@@ -56,39 +63,7 @@ trait UserTrait
         ;
     }
 
-    /**
-     * @return User|null
-     */
-    public function getAdminUser(): ?User
-    {
-        return $this->findOneUserByMail(UserFixtures::EMAIL_ADMIN);
-    }
-
-    /**
-     * @return User|null
-     */
-    public function getSuperAdminUser(): ?User
-    {
-        return $this->findOneUserByMail(UserFixtures::EMAIL_SUPER_ADMIN);
-    }
-
-    /**
-     * @return User|null
-     */
-    public function getProjectManagerUser(): ?User
-    {
-        return $this->findOneUserByMail(UserFixtures::EMAIL_PROJECT_MANAGER);
-    }
-
-    /**
-     * @return User|null
-     */
-    public function getUser(): ?User
-    {
-        return $this->findOneUserByMail(UserFixtures::EMAIL_USER);
-    }
-
-    public function createFakeUser($role = User::BUNDLE_USER): User
+    private function createFakeUser($role = User::ROLE_USER): User
     {
         $faker = Factory::create();
 
@@ -111,52 +86,92 @@ trait UserTrait
      * @param string $type
      * @return User
      */
-    public function createFakeUserByType(string $type): User
+    private function createFakeUserByType(string $type): User
     {
         switch ($type) {
             case "user":
-                return $this->createFakeUser(User::BUNDLE_USER);
+                return $this->createFakeUser(User::ROLE_USER);
             case "admin":
-                return $this->createFakeUser(User::BUNDLE_ADMIN);
+                return $this->createFakeUser(User::ROLE_ADMIN);
             case "super admin":
-                return $this->createFakeUser(User::BUNDLE_SUPER_ADMIN);
+                return $this->createFakeUser(User::ROLE_SUPER_ADMIN);
             case "project manager":
-                return $this->createFakeUser(User::BUNDLE_PROJECT_MANAGER);
+                return $this->createFakeUser(User::ROLE_PROJECT_MANAGER);
         }
         throw new \RuntimeException('Invalid user type ' . $type);
-    }
-
-    /**
-     * @param string|int $id
-     */
-    public function deleteUser($id): void
-    {
-        $user = $this->em->getRepository(User::class)->findOneById($id);
-        if ($user === null) {
-            throw new \RuntimeException('Cannot found user ' . $id);
-        }
-
-        $this->em->remove($user);
-        $this->em->flush();
     }
 
     /**
      * @param string $type
      * @return User
      */
-    public function getUserByType(string $type): User
+    private function getUserByType(string $type): User
     {
         switch ($type) {
             case "user":
-                return $this->getUser();
+                return $this->findOneUserByMail(UserFixtures::EMAIL_USER);
             case "admin":
-                return $this->getAdminUser();
+                return $this->findOneUserByMail(UserFixtures::EMAIL_ADMIN);
             case "super admin":
-                return $this->getSuperAdminUser();
+                return $this->findOneUserByMail(UserFixtures::EMAIL_SUPER_ADMIN);
             case "project manager":
-                return $this->getProjectManagerUser();
+                return $this->findOneUserByMail(UserFixtures::EMAIL_PROJECT_MANAGER);
         }
         throw new \RuntimeException('Invalid user type ' . $type);
     }
 
+    /**
+     * @When /^an user of type (admin|super admin|project manager|user) saved in (.+)$/
+     * @param string $type
+     * @param string $path
+     */
+    public function addFakeUser(string $type, string $path): void
+    {
+        $user = $this->createFakeUserByType($type);
+        $this->accessor->setValue($this->bucket, $path, $user);
+    }
+
+    /**
+     * @When /^i set my jwt value to (.+)$/
+     * @param string $bucket
+     * @param string $key
+     */
+    public function iSetMyJwtTo(string $path): void
+    {
+        if ($this->bucket['user'] === null) {
+            throw new RuntimeException('No user selected');
+        }
+
+        $this->accessor->setValue(
+            $this->bucket, $path,
+            $this->userManager->getJwt($this->bucket['user'])
+        );
+    }
+
+    /**
+     * @When /^i set my refresh token value to (.+)$/
+     * @param string $path
+     */
+    public function iSetMyRefreshTokenTo( string $path): void
+    {
+        if ($this->bucket['user'] === null) {
+            throw new RuntimeException('No user selected');
+        }
+
+        $this->requestStack->push(Request::create('/'));
+        $this->accessor->setValue(
+            $this->bucket, $path,
+            $this->userManager->getRefreshToken($this->bucket['user'])
+        );
+        $this->requestStack->pop();
+    }
+
+    /**
+     * @When /^i am an user of type (admin|super admin|project manager|user)$/
+     * @param string $type
+     */
+    public function iAmAnUserOfType(string $type): void
+    {
+        $this->bucket['user'] = $this->getUserByType($type);
+    }
 }

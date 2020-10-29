@@ -28,16 +28,16 @@ class UserFixtures extends Fixture
     public function load(ObjectManager $manager)
     {
         $manager->persist(
-            $this->createUser(self::EMAIL_ADMIN, User::BUNDLE_ADMIN)
+            $this->createUser(self::EMAIL_ADMIN, User::ROLE_ADMIN)
         );
         $manager->persist(
-            $this->createUser(self::EMAIL_SUPER_ADMIN, User::BUNDLE_SUPER_ADMIN)
+            $this->createUser(self::EMAIL_SUPER_ADMIN, User::ROLE_SUPER_ADMIN)
         );
         $manager->persist(
-            $this->createUser(self::EMAIL_PROJECT_MANAGER, User::BUNDLE_PROJECT_MANAGER)
+            $this->createUser(self::EMAIL_PROJECT_MANAGER, User::ROLE_PROJECT_MANAGER)
         );
         $manager->persist(
-            $this->createUser(self::EMAIL_USER, User::BUNDLE_USER)
+            $this->createUser(self::EMAIL_USER, User::ROLE_USER)
         );
         $manager->flush();
     }

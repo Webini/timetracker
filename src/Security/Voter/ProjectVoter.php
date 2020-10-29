@@ -5,41 +5,37 @@ namespace App\Security\Voter;
 use App\Entity\AssignedProject;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Traits\AuthorizationCheckerAwareTrait;
+use App\Traits\EntityManagerAwareTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class ProjectVoter extends Voter
 {
+    use EntityManagerAwareTrait;
+    use AuthorizationCheckerAwareTrait;
+
     const PROJECT_CREATE = 'PROJECT_CREATE';
     const PROJECT_CREATE_TASK = 'PROJECT_CREATE_TASK';
 
     const ALL_ATTRIBUTES = [
-        self::PROJECT_CREATE_TASK,
+        self::PROJECT_CREATE,
         self::PROJECT_CREATE_TASK
     ];
 
-    /**
-     * @var EntityManagerInterface
-     */
-    private $em;
-
-    /**
-     * ProjectVoter constructor.
-     * @param EntityManagerInterface $em
-     */
-    public function __construct(EntityManagerInterface $em)
-    {
-        $this->em = $em;
-    }
+    const ATTRIBUTES_WITHOUT_SUBJECT = [
+        self::PROJECT_CREATE,
+    ];
 
     protected function supports($attribute, $subject)
     {
-        // replace with your own logic
-        // https://symfony.com/doc/current/security/voters.html
+        if (in_array($attribute, self::ATTRIBUTES_WITHOUT_SUBJECT)) {
+            return true;
+        }
         return in_array($attribute, self::ALL_ATTRIBUTES)
-            && $subject instanceof \App\Entity\Project;
+            && $subject instanceof Project;
     }
 
     protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
@@ -51,7 +47,7 @@ class ProjectVoter extends Voter
         }
 
         if ($attribute === self::PROJECT_CREATE) {
-            return $this->canCreate($user);
+            return $this->canCreate();
         }
         if ($attribute === self::PROJECT_CREATE_TASK) {
             return $this->canCreateTask($user, $subject);
@@ -61,12 +57,11 @@ class ProjectVoter extends Voter
     }
 
     /**
-     * @param User $user
      * @return bool
      */
-    public function canCreate(User $user): bool
+    public function canCreate(): bool
     {
-        return $user->hasRole(User::ROLE_PROJECT_MANAGER);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]);
     }
 
     /**

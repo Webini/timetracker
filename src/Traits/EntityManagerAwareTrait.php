@@ -1,12 +1,12 @@
 <?php
 
 
-namespace App\Controller\Api;
+namespace App\Traits;
 
 
 use Doctrine\ORM\EntityManagerInterface;
 
-trait EntityManagerTrait
+trait EntityManagerAwareTrait
 {
     /**
      * @var EntityManagerInterface

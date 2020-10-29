@@ -9,6 +9,7 @@ use App\Form\Entity\UserType;
 use App\Form\Model\UserSearchType;
 use App\Manager\UserManager;
 use App\Security\Voter\UserVoter;
+use App\Traits\EntityManagerAwareTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
@@ -19,8 +20,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends AbstractFOSRestController
 {
-    use RootFormFactoryTrait;
-    use EntityManagerTrait;
+    use SubmitFormTrait;
+    use EntityManagerAwareTrait;
 
     /**
      * @var UserManager
@@ -47,7 +48,7 @@ class UserController extends AbstractFOSRestController
             ]
         );
 
-        $this->submitForm($form, $request);
+        $this->submitRequestContent($form, $request);
         if ($form->isSubmitted() && $form->isValid()) {
             $user = $this->userManager->create($form->getData());
             $this->em->persist($user);

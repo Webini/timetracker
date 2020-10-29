@@ -5,10 +5,8 @@ namespace App\Form\Entity;
 
 
 use App\Entity\User;
-use App\Form\Type\BooleanType;
-use App\Security\Voter\UserVoter;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -63,15 +61,28 @@ class UserType extends AbstractType
             return;
         }
 
-        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_PROJECT_MANAGER)) {
-            $builder->add('projectManager', BooleanType::class);
+        $isAdmin = $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]);
+        $isSAdmin = $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN]);
+
+        if (!$isAdmin && !$isSAdmin) {
+            return;
         }
-        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_ADMIN)) {
-            $builder->add('admin', BooleanType::class);
+
+        $roles = [
+            User::ROLES[User::ROLE_USER],
+            User::ROLES[User::ROLE_PROJECT_MANAGER]
+        ];
+
+        if ($isSAdmin) {
+            $roles[] = User::ROLES[User::ROLE_ADMIN];
+            $roles[] = User::ROLES[User::ROLE_SUPER_ADMIN];
         }
-        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_SUPER_ADMIN)) {
-            $builder->add('superAdmin', BooleanType::class);
-        }
+
+        $builder->add('roles', ChoiceType::class, [
+            'choices' => $roles,
+            'expanded' => false,
+            'multiple' => false
+        ]);
     }
 
     /**

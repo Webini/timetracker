@@ -1,5 +1,5 @@
 Feature:
-    In order to create account
+    In order to create an account
     As a super administrator i want to create any types of users
     As an administrator i want to create project manager and users
     As project manager i want to create users
@@ -14,12 +14,12 @@ Feature:
           "lastName": "Edouard",
           "email": "sasa@edouard.com",
           "plainPassword": "test1234",
-          "superAdmin": true
+          "roles": "ROLE_SUPER_ADMIN"
         }
         """
         And i send a put on route api_users_create
         Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_USER", "ROLE_PROJECT_MANAGER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"]
+        And the response item [roles] should be equal to ["ROLE_SUPER_ADMIN"]
 
     Scenario: As a super administrator i can create an admin account
         Given i am an user of type super admin
@@ -30,12 +30,12 @@ Feature:
           "lastName": "Edouard",
           "email": "sa-a@edouard.com",
           "plainPassword": "test1234",
-          "admin": true
+          "roles": "ROLE_ADMIN"
         }
         """
         And i send a put on route api_users_create
         Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_USER", "ROLE_PROJECT_MANAGER", "ROLE_ADMIN"]
+        And the response item [roles] should be equal to ["ROLE_ADMIN"]
 
     Scenario: As an administrator i can't create an admin account
         Given i am an user of type admin
@@ -46,11 +46,12 @@ Feature:
           "lastName": "Edouard",
           "email": "a-a@edouard.com",
           "plainPassword": "test1234",
-          "admin": true
+          "roles": "ROLE_ADMIN"
         }
         """
         And i send a put on route api_users_create
         Then the status code should be 400
+        And the response item [errors][children][roles][errors] should not be empty
 
     Scenario: As an administrator i can create a project manager
         Given i am an user of type admin
@@ -61,12 +62,12 @@ Feature:
           "lastName": "Edouard",
           "email": "a-pm@edouard.com",
           "plainPassword": "test1234",
-          "projectManager": true
+          "roles": "ROLE_PROJECT_MANAGER"
         }
         """
         And i send a put on route api_users_create
         Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_USER", "ROLE_PROJECT_MANAGER"]
+        And the response item [roles] should be equal to ["ROLE_PROJECT_MANAGER"]
 
     Scenario: As a project manager i can't create a project manager
         Given i am an user of type project manager
@@ -77,11 +78,12 @@ Feature:
           "lastName": "Edouard",
           "email": "pm-pm@edouard.com",
           "plainPassword": "test1234",
-          "projectManager": true
+          "roles": "ROLE_PROJECT_MANAGER"
         }
         """
         And i send a put on route api_users_create
         Then the status code should be 400
+        And the response item [errors][errors] should not be empty
 
     Scenario: As a project manager i can create an user
         Given i am an user of type project manager

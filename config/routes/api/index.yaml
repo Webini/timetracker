@@ -5,3 +5,7 @@ api_auth:
 api_users:
   resource: users.yaml
   prefix: /users
+
+api_projects:
+  resource: projects.yaml
+  prefix: /projects
