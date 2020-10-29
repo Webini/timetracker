@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
+use PHPUnit\Framework\Assert;
 
 final class ApiContext implements Context
 {
@@ -62,7 +63,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.?]+)$/
+     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.]+)$/
      * @param string $method
      * @param string $route
      * @throws \Exception
@@ -114,12 +115,15 @@ final class ApiContext implements Context
     }
 
     /**
-     * @When /^i am an user of type ([a-zA-Z]+)$/
+     * @When /^i am an user of type (.+)$/
      * @param string $type
      */
     public function iAmAnUserOfType(string $type): void
     {
         $this->user = $this->getUserByType($type);
+        if ($this->user === null) {
+            throw new \RuntimeException('Cannot found user of type ' . $type);
+        }
     }
 
     /**
@@ -200,12 +204,15 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response should be successful$/
+     * @Then /^the response (should|should not) be successful$/
      */
-    public function theResponseShouldBeSuccessful(): void
+    public function theResponseShouldOrShouldNotBeSuccessful(string $condition): void
     {
         $statusCode = $this->response->getStatusCode();
-        if (substr((string)$statusCode, 0, 1) !== "2") {
+        $condition = strtolower($condition);
+        $firstDigit = substr((string)$statusCode, 0, 1);
+        if (($condition === 'should' && $firstDigit !== '2') ||
+            ($condition === 'should not' && $firstDigit === '2')) {
             throw new \RuntimeException(sprintf(
                 "Invalid status code received : %d\n%s",
                 $statusCode,
@@ -215,49 +222,42 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response should not be successful$/
-     */
-    public function theResponseShouldNotBeSuccessful(): void
-    {
-        $statusCode = $this->response->getStatusCode();
-        if (substr((string)$statusCode, 0, 1) === "2") {
-            throw new \RuntimeException(sprintf(
-                "Invalid status code received : %d\n%s",
-                $statusCode,
-                var_export($this->getResponseContent(), true)
-            ));
-        }
-    }
-
-    /**
-     * @Then /^the status code should be ([0-9]+)$/
+     * @Then /^the status code (should|should not) be ([0-9]+)$/
      * @param int $statusCode
      */
-    public function theStatusCodeShouldBe(int $statusCode): void
+    public function theStatusCodeShouldOrShouldNotBe(string $condition, int $statusCode): void
     {
-        if ($statusCode !== $this->response->getStatusCode()) {
+        $condition = strtolower($condition);
+        $responseStatusCode = $this->response->getStatusCode();
+        if (($condition === 'should' && $statusCode !== $responseStatusCode) ||
+            ($condition === 'should not' && $statusCode === $responseStatusCode)) {
             throw new \RuntimeException(sprintf(
-                'Invalid status code %s expected %d',
+                'Invalid status code %s, it %s be %d',
                 $this->response->getStatusCode(),
+                $condition,
                 $statusCode
             ));
         }
     }
 
     /**
-     * @Then /^the response should have keys (.*)$/
+     * @Then /^the response (should|should not) have keys (.+)$/
      * @param $keys
      */
-    public function theResponseShouldHaveKeys(string $keys): void
+    public function theResponseShouldOrShouldNotHaveKeys(string $condition, string $keys): void
     {
         $keys = explode(',', $keys);
         $content = $this->getResponseContent();
+        $condition = strtolower($condition);
         foreach ($keys as $key) {
             $key = trim($key);
-            if (!$this->accessor->isReadable($content, $key)) {
+            $readable = $this->accessor->isReadable($content, $key);
+            if (($condition === 'should' && !$readable) ||
+                ($condition === 'should not' && $readable)) {
                 throw new \RuntimeException(sprintf(
-                    'The key %s be present in response %s',
+                    'The key %s %s present in response %s',
                     $key,
+                    $condition,
                     var_export($content, true)
                 ));
             }
@@ -265,22 +265,34 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response should not have keys (.*)$/
-     * @param string $keys
+     * @Then /^the response item (.+?) (should|should not) be (.+?)$/
      */
-    public function theResponseShouldNotHaveKeys(string $keys): void
+    public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $expected): void
     {
-        $keys = explode(',', $keys);
+        $expected = json_decode($expected, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                sprintf('Cannot parse expected value (%s), don\'t forget to use json synthax', json_last_error_msg())
+            );
+        }
+
         $content = $this->getResponseContent();
-        foreach ($keys as $key) {
-            $key = trim($key);
-            if ($this->accessor->isReadable($content, $key)) {
-                throw new \RuntimeException(sprintf(
-                    'The key %s should not be present in response %s',
-                    $key,
-                    var_export($content, true)
-                ));
-            }
+        if (!$this->accessor->isReadable($content, $key)) {
+            throw new \RuntimeException(sprintf(
+                'Cannot found element %s in response %s',
+                $key,
+                var_export($content, true)
+            ));
+        }
+
+        $value = $this->accessor->getValue($content, $key);
+        $condition = strtolower($condition);
+
+        if ($condition === 'should') {
+            Assert::assertEquals($expected, $value);
+        }
+        if ($condition === 'should not') {
+            Assert::assertNotEquals($expected, $value);
         }
     }
 

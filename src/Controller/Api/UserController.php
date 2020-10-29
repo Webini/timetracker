@@ -4,8 +4,10 @@
 namespace App\Controller\Api;
 
 
+use App\Entity\User;
 use App\Form\Entity\UserType;
 use App\Manager\UserManager;
+use App\Security\Voter\UserVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
@@ -30,16 +32,15 @@ class UserController extends AbstractFOSRestController
     }
 
     /**
-     * Rest\View(serializerGroups={"group1", "group2"})
      * @param Request $request
      * @return View
      */
-    public function register(Request $request): View
+    public function create(Request $request): View
     {
         $form = $this->createForm(
             UserType::class,
             null,
-            [ 'validation_groups' => [ 'password', 'Default' ]]
+            [ 'validation_groups' => [ 'password', 'Default' ] ]
         );
 
         $this->submitForm($form, $request);
@@ -59,5 +60,15 @@ class UserController extends AbstractFOSRestController
         }
 
         return $this->view($form);
+    }
+
+    /**
+     * @param Request $request
+     * @return View
+     */
+    public function createLogged(Request $request): View
+    {
+        $this->denyAccessUnlessGranted(UserVoter::USER_CREATE);
+        return $this->create($request);
     }
 }

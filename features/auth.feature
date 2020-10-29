@@ -28,3 +28,18 @@ Feature:
         Given i am an user of type user
         When i send a post on route api_auth_refresh_token
         Then the status code should be 401
+
+    Scenario: As an anonymous user i can create an account
+        When i add to content values:
+        """
+        {
+          "firstName": "Anonymous",
+          "lastName": "Edouard",
+          "email": "Anonymous@edouard.com",
+          "plainPassword": "test1234"
+        }
+        """
+        And i send a post on route api_auth_register
+        Then the response should be successful
+        And the response should have keys [token],[refreshToken],[id],[email],[emailValidated],[firstName],[lastName],[roles]
+        And the response should not have keys [password],[plainPassword]

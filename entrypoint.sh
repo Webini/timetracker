@@ -19,26 +19,18 @@ echo "Done."
 
 if [[ "$1" == "console" ]]; then
   ARGUMENTS=( web bin/console )
-  for arg in "$@"; do
-    if [[ "$arg" != "console" ]]; then
-      ARGUMENTS+=( "$arg" )
-    fi
-  done
+  ARGUMENTS+=( ${@:2} )
   exec "gosu" ${ARGUMENTS[@]}
   exit
 elif [[ "$1" == "composer" ]]; then
   ARGUMENTS=( web composer )
-  for arg in "$@"; do
-    if [[ "$arg" != "composer" ]]; then
-      ARGUMENTS+=( "$arg" )
-    fi
-  done
+  ARGUMENTS+=( ${@:2} )
   exec "gosu" ${ARGUMENTS[@]}
   exit
 elif [[ "$1" == "behat" ]]; then
-  gosu web ./vendor/bin/behat
   if [[ "$2" == "watch" ]]; then
     unset IFS
+    ARGUMENTS+=( ${@:3} )
     inotifywait -rme create,delete,modify,move --exclude '.*\.(swp|swx|.*~)$' ./src ./tests ./features ./config | while read LINE; do
       # debounce clodo
       JOBS=`jobs -r -p | xargs`
@@ -49,9 +41,12 @@ elif [[ "$1" == "behat" ]]; then
       (
           sleep 1
           gosu web ./bin/console doctrine:fixtures:load -q
-          gosu web ./vendor/bin/behat --strict < /dev/null
+          gosu web ./vendor/bin/behat ${ARGUMENTS[@]} < /dev/null
       )&
     done
+  else
+    ARGUMENTS+=( ${@:2} )
+    gosu web ./vendor/bin/behat ${ARGUMENTS[@]} < /dev/null
   fi
   exit
 fi

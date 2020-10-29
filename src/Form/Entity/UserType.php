@@ -6,6 +6,7 @@ namespace App\Form\Entity;
 
 use App\Entity\User;
 use App\Form\Type\BooleanType;
+use App\Security\Voter\UserVoter;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -54,11 +55,19 @@ class UserType extends AbstractType
             ->add('email', EmailType::class, [ 'constraints' => new NotBlank() ])
         ;
 
-        if ($this->tokenStorage->getToken() && $this->authorizationChecker->isGranted(User::ROLE_SUPER_ADMIN)) {
-            $builder
-                ->add('superAdmin', BooleanType::class)
-                ->add('admin', BooleanType::class)
-            ;
+        $token = $this->tokenStorage->getToken();
+        if (!$token) {
+            return;
+        }
+
+        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_PROJECT_MANAGER)) {
+            $builder->add('projectManager', BooleanType::class);
+        }
+        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_ADMIN)) {
+            $builder->add('admin', BooleanType::class);
+        }
+        if ($this->authorizationChecker->isGranted(UserVoter::USER_CREATE_SUPER_ADMIN)) {
+            $builder->add('superAdmin', BooleanType::class);
         }
     }
 

@@ -31,9 +31,9 @@ class User implements \Serializable, UserInterface
     const ROLE_SUPER_ADMIN = 256;
 
     const BUNDLE_USER = self::ROLE_USER;
-    const BUNDLE_PROJECT_MANAGER = self::ROLE_USER | self::ROLE_PROJECT_MANAGER;
+    const BUNDLE_PROJECT_MANAGER = self::BUNDLE_USER | self::ROLE_PROJECT_MANAGER;
     const BUNDLE_ADMIN = self::BUNDLE_PROJECT_MANAGER | self::ROLE_ADMIN;
-    const BUNDLE_SUPER_ADMIN = self::ROLE_ADMIN | self::ROLE_SUPER_ADMIN;
+    const BUNDLE_SUPER_ADMIN = self::BUNDLE_ADMIN | self::ROLE_SUPER_ADMIN;
 
     const ROLES = [
         self::ROLE_USER => 'ROLE_USER',
@@ -171,25 +171,17 @@ class User implements \Serializable, UserInterface
      */
     public function removeRole(int $role): self
     {
-        if (is_numeric($role)) {
-            $this->roles = $this->roles ^ $role;
-        } else {
-            $this->roles = $this->roles ^ array_reverse(self::ROLES)[$role];
-        }
+        $this->roles = $this->roles ^ ($this->roles & $role);
         return $this;
     }
 
     /**
-     * @param integer|string $role cf User::ROLE_*
+     * @param integer $role cf User::ROLE_*
      * @return $this
      */
     public function addRole($role)
     {
-        if (is_numeric($role)) {
-            $this->roles |= $role;
-        } else {
-            $this->roles |= array_reverse(self::ROLES)[$role];
-        }
+        $this->roles |= $role;
         return $this;
     }
 
@@ -202,12 +194,21 @@ class User implements \Serializable, UserInterface
     }
 
     /**
-     * @param integer $role cf User::ROLE_*
+     * @param integer $roles cf User::ROLE_*
      * @return bool
      */
-    public function hasRole(int $role): bool
+    public function hasRole(int $roles): bool
     {
-        return ($this->roles & $role) > 0;
+        return ($this->roles & $roles) === $roles;
+    }
+
+    /**
+     * @param int $roles
+     * @return bool
+     */
+    public function hasOneRole(int $roles): bool
+    {
+        return ($this->roles & $roles) > 0;
     }
 
     /**
@@ -368,13 +369,35 @@ class User implements \Serializable, UserInterface
     }
 
     /**
+     * @param bool $projectManager
+     * @return $this
+     */
+    public function setProjectManager(?bool $projectManager): self
+    {
+        if ($projectManager) {
+            $this->addRole(self::ROLE_PROJECT_MANAGER);
+        } else {
+            $this->removeRole(self::ROLE_PROJECT_MANAGER);
+        }
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProjectManager(): bool
+    {
+        return $this->hasRole(self::ROLE_PROJECT_MANAGER);
+    }
+
+    /**
      * @param bool $admin
      * @return $this
      */
-    public function setAdmin(bool $admin): self
+    public function setAdmin(?bool $admin): self
     {
         if ($admin) {
-            $this->addRole(self::ROLE_ADMIN);
+            $this->addRole(self::BUNDLE_ADMIN);
         } else {
             $this->removeRole(self::ROLE_ADMIN);
         }
@@ -393,10 +416,10 @@ class User implements \Serializable, UserInterface
      * @param bool $admin
      * @return $this
      */
-    public function setSuperAdmin(bool $admin): self
+    public function setSuperAdmin(?bool $admin): self
     {
         if ($admin) {
-            $this->addRole(self::ROLE_SUPER_ADMIN);
+            $this->addRole(self::BUNDLE_SUPER_ADMIN);
         } else {
             $this->removeRole(self::ROLE_SUPER_ADMIN);
         }
@@ -418,7 +441,7 @@ class User implements \Serializable, UserInterface
 
     public function getUsername()
     {
-        return $this->getId();
+        return $this->getEmail();
     }
 
     public function eraseCredentials()

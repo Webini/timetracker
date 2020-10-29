@@ -27,7 +27,7 @@ security:
                 require_previous_session: false
 
         api:
-            pattern: ^/api(?!/users/register|/auth/refresh).*$ #^/api.*(?<!\.html)$
+            pattern: ^/api(?!/auth/.*).*$ #^/api.*(?<!\.html)$
             stateless: true
             provider: in_database_users
             guard:
@@ -42,7 +42,5 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api/auth/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/api/auth/refresh, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/api/users/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/auth, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }

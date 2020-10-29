@@ -12,8 +12,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class ProjectVoter extends Voter
 {
-    const PROJECT_CREATE = 1;
-    const PROJECT_CREATE_TASK = 8;
+    const PROJECT_CREATE = 'PROJECT_CREATE';
+    const PROJECT_CREATE_TASK = 'PROJECT_CREATE_TASK';
 
     const ALL_ATTRIBUTES = [
         self::PROJECT_CREATE_TASK,

@@ -60,18 +60,11 @@ class UserManager
 
     /**
      * @param User|null $user
-     * @param boolean $superAdmin
      * @return User
      */
-    public function create(?User $user = null, $superAdmin = false): User
+    public function create(?User $user = null): User
     {
-        $user = $user ?? new User();
-
-        if ($superAdmin) {
-            $user->setRoles(User::BUNDLE_SUPER_ADMIN);
-        }
-
-        return $user;
+        return $user ?? new User();
     }
 
     /**

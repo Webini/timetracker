@@ -47,7 +47,7 @@ trait UserTrait
      * @param string $email
      * @return User|null
      */
-    protected function findUserByMail(string $email): ?User
+    protected function findOneUserByMail(string $email): ?User
     {
         return $this->em
             ->getRepository(User::class)
@@ -76,7 +76,7 @@ trait UserTrait
      */
     public function getProjectManagerUser(): ?User
     {
-        return $this->findUserByMail(UserFixtures::EMAIL_PROJECT_MANAGER);
+        return $this->findOneUserByMail(UserFixtures::EMAIL_PROJECT_MANAGER);
     }
 
     /**
@@ -84,7 +84,7 @@ trait UserTrait
      */
     public function getUser(): ?User
     {
-        return $this->findUserByMail(UserFixtures::EMAIL_USER);
+        return $this->findOneUserByMail(UserFixtures::EMAIL_USER);
     }
 
     /**

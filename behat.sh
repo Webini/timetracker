@@ -18,6 +18,6 @@ safe-doco run --rm app console doctrine:migration:migrate -q
 echo "Load fixtures..."
 safe-doco run --rm app console doctrine:fixtures:load -q
 echo "Start behat..."
-safe-doco run --rm app behat $1
+safe-doco run --rm app behat ${@}
 echo "Cleaning..."
 docker-compose -p $COMPOSE_PREFIX -f $COMPOSE_FILE down

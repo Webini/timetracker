@@ -10,8 +10,8 @@ use Faker;
 class UserFixtures extends Fixture
 {
     const EMAIL_ADMIN = 'admin@fixture.fr';
-    const EMAIL_SUPER_ADMIN = 'superAdmin@fixture.fr';
-    const EMAIL_PROJECT_MANAGER = 'projectManager@fixture.fr';
+    const EMAIL_SUPER_ADMIN = 'super-admin@fixture.fr';
+    const EMAIL_PROJECT_MANAGER = 'project-manager@fixture.fr';
     const EMAIL_USER = 'user@fixture.fr';
     const PASSWORD = 'demopassword';
 

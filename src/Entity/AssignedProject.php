@@ -88,7 +88,7 @@ class AssignedProject
 
     public function removePermission(int $permission): self
     {
-        $this->permissions = $this->permissions ^ $permission;
+        $this->permissions = $this->permissions ^ ($this->permissions & $permission);
         return $this;
     }
 
