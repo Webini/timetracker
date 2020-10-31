@@ -109,7 +109,7 @@ class User implements \Serializable, UserInterface
     private $taskProviders;
 
     /**
-     * @ORM\OneToMany(targetEntity=AssignedProject::class, mappedBy="assignedUsers", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=AssignedUser::class, cascade={"persist"}, mappedBy="assigned", orphanRemoval=true)
      */
     private $assignedProjects;
 
@@ -423,14 +423,14 @@ class User implements \Serializable, UserInterface
     }
 
     /**
-     * @return Collection|AssignedProject[]
+     * @return Collection|AssignedUser[]
      */
     public function getAssignedProjects(): Collection
     {
         return $this->assignedProjects;
     }
 
-    public function addAssignedProject(AssignedProject $assignedProject): self
+    public function addAssignedProject(AssignedUser $assignedProject): self
     {
         if (!$this->assignedProjects->contains($assignedProject)) {
             $this->assignedProjects[] = $assignedProject;
@@ -440,7 +440,7 @@ class User implements \Serializable, UserInterface
         return $this;
     }
 
-    public function removeAssignedProject(AssignedProject $assignedProject): self
+    public function removeAssignedProject(AssignedUser $assignedProject): self
     {
         if ($this->assignedProjects->contains($assignedProject)) {
             $this->assignedProjects->removeElement($assignedProject);

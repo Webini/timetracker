@@ -80,6 +80,12 @@ class UserType extends AbstractType
 
         $builder->add('roles', ChoiceType::class, [
             'choices' => $roles,
+            'choice_value' => function ($data) {
+                if (is_array($data)) {
+                    return $data[0];
+                }
+                return $data;
+            },
             'expanded' => false,
             'multiple' => false
         ]);

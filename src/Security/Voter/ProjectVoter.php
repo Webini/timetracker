@@ -2,14 +2,12 @@
 
 namespace App\Security\Voter;
 
-use App\Entity\AssignedProject;
+use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Traits\AuthorizationCheckerAwareTrait;
 use App\Traits\EntityManagerAwareTrait;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class ProjectVoter extends Voter
@@ -18,26 +16,41 @@ class ProjectVoter extends Voter
     use AuthorizationCheckerAwareTrait;
 
     const PROJECT_CREATE = 'PROJECT_CREATE';
-    const PROJECT_CREATE_TASK = 'PROJECT_CREATE_TASK';
+    const PROJECT_UPDATE = 'PROJECT_UPDATE';
+    const PROJECT_READ_FULL = 'PROJECT_READ_FULL';
+    const PROJECT_READ = 'PROJECT_READ';
 
-    const ALL_ATTRIBUTES = [
+//    const PROJECT_CREATE_TASK = 'PROJECT_CREATE_TASK';
+
+    const ALLOWED_ATTRIBUTES = [
         self::PROJECT_CREATE,
-        self::PROJECT_CREATE_TASK
+        self::PROJECT_UPDATE,
+        self::PROJECT_READ_FULL,
+        self::PROJECT_READ,
+//        self::PROJECT_CREATE_TASK,
     ];
 
-    const ATTRIBUTES_WITHOUT_SUBJECT = [
-        self::PROJECT_CREATE,
-    ];
-
-    protected function supports($attribute, $subject)
+    /**
+     * @param string $attribute
+     * @param mixed $subject
+     * @return bool
+     */
+    protected function supports(string $attribute, $subject)
     {
-        if (in_array($attribute, self::ATTRIBUTES_WITHOUT_SUBJECT)) {
+        if ($attribute === self::PROJECT_CREATE) {
             return true;
         }
-        return in_array($attribute, self::ALL_ATTRIBUTES)
+
+        return in_array($attribute, self::ALLOWED_ATTRIBUTES)
             && $subject instanceof Project;
     }
 
+    /**
+     * @param string $attribute
+     * @param mixed $subject
+     * @param TokenInterface $token
+     * @return bool
+     */
     protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
     {
         $user = $token->getUser();
@@ -49,8 +62,83 @@ class ProjectVoter extends Voter
         if ($attribute === self::PROJECT_CREATE) {
             return $this->canCreate();
         }
-        if ($attribute === self::PROJECT_CREATE_TASK) {
-            return $this->canCreateTask($user, $subject);
+        if ($attribute === self::PROJECT_UPDATE) {
+            return $this->canUpdate($user, $subject);
+        }
+//        if ($attribute === self::PROJECT_CREATE_TASK) {
+//            return $this->canCreateTask($user, $subject);
+//        }
+        if ($attribute === self::PROJECT_READ_FULL) {
+            return $this->canReadFull($user, $subject);
+        }
+        if ($attribute === self::PROJECT_READ) {
+            return $this->canRead($user, $subject);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param User $user
+     * @param Project $project
+     * @return AssignedUser|null
+     */
+    private function getAssignedUser(User $user, Project $project): ?AssignedUser
+    {
+        $assignedUserRepo = $this->em->getRepository(AssignedUser::class);
+        return $assignedUserRepo->findForProjectAndUser($project, $user);
+    }
+
+    /**
+     * @param User $user
+     * @param Project $project
+     * @return bool
+     */
+    public function canRead(User $user, Project $project): bool
+    {
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        $assignedUser = $this->getAssignedUser($user, $project);
+        return $assignedUser !== null;
+    }
+
+    /**
+     * @param User $user
+     * @param Project $project
+     * @return bool
+     */
+    public function canReadFull(User $user, Project $project): bool
+    {
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        $assignedUser = $this->getAssignedUser($user, $project);
+        if ($assignedUser !== null) {
+            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
+        }
+
+        return false;
+    }
+
+    /**
+     * Admin and super admin can update a project
+     * Project managers can update the project only if they are project admin
+     * @param User $user
+     * @param Project $project
+     * @return bool
+     */
+    public function canUpdate(User $user, Project $project): bool
+    {
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        $assignedUser = $this->getAssignedUser($user, $project);
+        if ($assignedUser !== null) {
+            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
         }
 
         return false;
@@ -69,16 +157,13 @@ class ProjectVoter extends Voter
      * @param Project $project
      * @return bool
      */
-    public function canCreateTask(User $user, Project $project): bool
-    {
-        $assignedProjectRepo = $this->em->getRepository(AssignedProject::class);
-        /** @var AssignedProject|null $assignedProject */
-        $assignedProject = $assignedProjectRepo->findForUserAndProject($project, $user);
-
-        if ($assignedProject === null) {
-            return false;
-        }
-
-        return $assignedProject->hasPermissions(AssignedProject::PERMISSION_ADD_TASK);
-    }
+//    public function canCreateTask(User $user, Project $project): bool
+//    {
+//        $assignedUser = $this->getAssignedUser($user, $project);
+//        if ($assignedUser !== null) {
+//            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_CREATE_TASK);
+//        }
+//
+//        return false;
+//    }
 }

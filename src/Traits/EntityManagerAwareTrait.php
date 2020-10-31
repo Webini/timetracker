@@ -23,4 +23,12 @@ trait EntityManagerAwareTrait
         $this->em = $em;
         return $this;
     }
+
+    /**
+     * @return EntityManagerInterface
+     */
+    protected function getEntityManager(): EntityManagerInterface
+    {
+        return $this->em;
+    }
 }

@@ -1,7 +1,7 @@
-@current
 Feature:
   As a super administrator, administrator or project manager
   i want to create a new project in order to add tasks
+  As an anonymous i can't create a project
 
   Scenario:
     Given i am an user of type super admin
@@ -29,3 +29,8 @@ Feature:
     And i set to [request][content] value {"name": "User Project"}
     Then i send a put on route api_projects_create
     And the status code should be 403
+
+  Scenario: As an anonymous i can't create a project
+    Given i set to [request][content] value {"name": "Anonymous project"}
+    When i send a put on route api_projects_create
+    And the status code should be 401

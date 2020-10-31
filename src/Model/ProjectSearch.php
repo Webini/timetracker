@@ -5,7 +5,7 @@ namespace App\Model;
 use App\Model\Pagination\PaginationInterface;
 use App\Model\Pagination\PaginationTrait;
 
-class UserSearch implements PaginationInterface
+class ProjectSearch implements PaginationInterface
 {
     use PaginationTrait;
 

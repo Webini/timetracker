@@ -62,6 +62,14 @@ services:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
 
+    App\Normalizer\Identifier\ObjectNormalizer:
+        class: App\Normalizer\Identifier\ObjectNormalizer
+        arguments:
+            $reader: '@annotation_reader'
+            $nameConverter: '@serializer.name_converter.metadata_aware'
+        tags:
+            - { name: 'serializer.normalizer', priority: -1 }
+
     #dirty boy
     gesdinet.jwtrefreshtoken.refresh_token_manager:
         class: App\Gesdinet\FixedRefreshTokenManager

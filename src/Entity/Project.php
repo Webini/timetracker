@@ -3,13 +3,12 @@
 namespace App\Entity;
 
 use App\Repository\ProjectRepository;
-use App\Entity\TaskProvider;
-use App\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Blameable\Traits\BlameableEntity;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -24,11 +23,13 @@ class Project
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      * @ORM\Column(type="integer")
+     * @Groups({ "project_full", "project_short" })
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({ "project_full", "project_short" })
      */
     private $name;
 
@@ -38,12 +39,14 @@ class Project
     private $taskProvider;
 
     /**
+     * @Groups({ "project_full" })
      * @ORM\Column(type="guid", unique=true)
      */
     private $guid;
 
     /**
      * @ORM\Column(type="json", nullable=true)
+     * @Groups({ "project_full" })
      */
     private $providerConfiguration = [];
 
@@ -53,7 +56,7 @@ class Project
     private $tasks;
 
     /**
-     * @ORM\OneToMany(targetEntity=AssignedProject::class, mappedBy="project", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=AssignedUser::class, cascade={"persist"}, mappedBy="project", orphanRemoval=true)
      */
     private $assignedUsers;
 
@@ -149,30 +152,30 @@ class Project
     }
 
     /**
-     * @return Collection|AssignedProject[]
+     * @return Collection|AssignedUser[]
      */
     public function getAssignedUsers(): Collection
     {
         return $this->assignedUsers;
     }
 
-    public function addAssignedUser(AssignedProject $assignedProject): self
+    public function addAssignedUser(AssignedUser $assignedUser): self
     {
-        if (!$this->assignedUsers->contains($assignedProject)) {
-            $this->assignedUsers[] = $assignedProject;
-            $assignedProject->setProject($this);
+        if (!$this->assignedUsers->contains($assignedUser)) {
+            $this->assignedUsers->add($assignedUser);
+            $assignedUser->setProject($this);
         }
 
         return $this;
     }
 
-    public function removeAssignedUser(AssignedProject $assignedProject): self
+    public function removeAssignedUser(AssignedUser $assignedUser): self
     {
-        if ($this->assignedUsers->contains($assignedProject)) {
-            $this->assignedUsers->removeElement($assignedProject);
+        if ($this->assignedUsers->contains($assignedUser)) {
+            $this->assignedUsers->removeElement($assignedUser);
             // set the owning side to null (unless already changed)
-            if ($assignedProject->getProject() === $this) {
-                $assignedProject->setProject(null);
+            if ($assignedUser->getProject() === $this) {
+                $assignedUser->setProject(null);
             }
         }
 

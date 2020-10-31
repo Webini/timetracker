@@ -4,6 +4,7 @@ Feature:
     As an administrator i want to create project manager and users
     As project manager i want to create users
     As user i don't want to create anybody
+    As an anonymous i can't create user
 
     Scenario: As a super administrator i can create a super admin account
         Given i am an user of type super admin

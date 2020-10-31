@@ -3,14 +3,14 @@
 
 namespace App\Tests\Behat;
 
+use App\Tests\Behat\Traits\AssignedUserContextTrait;
 use App\Traits\EntityManagerAwareTrait;
 use App\Entity\User;
-use App\Tests\Behat\Traits\ProjectTrait;
+use App\Tests\Behat\Traits\ProjectContextTrait;
 use App\Tests\Behat\Traits\RouterAwareTrait;
-use App\Tests\Behat\Traits\UserTrait;
+use App\Tests\Behat\Traits\UserContextTrait;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
-use http\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -22,8 +22,9 @@ final class ApiContext implements Context
 {
     use RouterAwareTrait;
     use EntityManagerAwareTrait;
-    use UserTrait;
-    use ProjectTrait;
+    use UserContextTrait;
+    use ProjectContextTrait;
+    use AssignedUserContextTrait;
 
     const ASSERT_MAP = [
         'should' => [
@@ -33,6 +34,7 @@ final class ApiContext implements Context
             'be equal to' => 'assertEquals',
             'be less than' => 'assertLessThan',
             'be less than or equal to' => 'assertLessThanOrEqual',
+            'count' => 'assertCount',
         ],
         'should not' => [
             'contains' => 'assertNotContains',
@@ -41,6 +43,7 @@ final class ApiContext implements Context
             'be equal to' => 'assertNotEquals',
             'be less than' => 'assertNotLessThan',
             'be less than or equal to' => 'assertNotLessThanOrEqual',
+            'count' => 'assertNotCount',
         ]
     ];
 
@@ -72,7 +75,6 @@ final class ApiContext implements Context
     public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;
-        $this->bucket = [ 'user' => null ];
         $this->strictAccessor = PropertyAccess::createPropertyAccessorBuilder()
             ->enableExceptionOnInvalidIndex()
             ->enableExceptionOnInvalidPropertyPath()
@@ -82,7 +84,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @When /^i send a ([a-zA-Z]+) on route ([a-zA-Z0-9\-_\.?]+)$/
+     * @When /^i send a (patch|get|put|post|delete|head) on route (\S+)$/
      * @param string $method
      * @param string $route
      * @throws \Exception
@@ -117,8 +119,9 @@ final class ApiContext implements Context
             }
         }
 
-        if ($this->bucket['user'] !== null) {
-            $request->headers->set('X-Authorization', $this->userManager->getJwt($this->bucket['user']));
+        $user = $this->getMe();
+        if ($user !== null) {
+            $request->headers->set('X-Authorization', $this->userManager->getJwt($user));
         }
 
         $this->response = $this->kernel->handle($request);
@@ -212,7 +215,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response (should|should not) have keys (.+)$/
+     * @Then /^the response (should|should not) have keys (\S+)$/
      * @param string $condition
      * @param string $keys
      */
@@ -221,6 +224,7 @@ final class ApiContext implements Context
         $keys = explode(',', $keys);
         $content = $this->getResponseContent();
         $condition = strtolower($condition);
+
         foreach ($keys as $key) {
             $key = trim($key);
             $readable = $this->strictAccessor->isReadable($content, $key);
@@ -237,7 +241,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response item ([^\s]+) (should|should not) be empty$/
+     * @Then /^the response item (\S+) (should|should not) be empty$/
      * @param string $key
      * @param string $condition
      */
@@ -265,7 +269,28 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response item ([^\s]+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to) (.+?)$/
+     * @Then /^the response item (\S+) (should|should not) be present$/
+     * @param string $key
+     * @param string $condition
+     */
+    public function theResponseItemShouldOrShouldNotBePresent(string $key, string $condition): void
+    {
+        $condition = strtolower($condition);
+        $content = $this->getResponseContent();
+
+        if (($condition === 'should' && !$this->strictAccessor->isReadable($content, $key)) ||
+            $condition === 'should not' && $this->strictAccessor->isReadable($content, $key)) {
+            throw new \RuntimeException(sprintf(
+                '%s element %s in response %s',
+                $condition === 'should' ? 'Cannot found' : 'Found',
+                $key,
+                var_export($content, true)
+            ));
+        }
+    }
+
+    /**
+     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (\S+)$/
      */
     public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $assertExpr, string $expected): void
     {
@@ -288,6 +313,21 @@ final class ApiContext implements Context
     }
 
     /**
+     * @Then /^the response (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (\S+)$/
+     * @param string $condition
+     * @param string $assertExpr
+     * @param string $expected
+     */
+    public function theResponseShouldOrNotBe(string $condition, string $assertExpr, string $expected): void
+    {
+        $content = $this->getResponseContent();
+        $expected = $this->jsonDecode($expected);
+        $condition = strtolower($condition);
+        $assert = $this->strictAccessor->getValue(self::ASSERT_MAP, '[' . $condition . '][' . $assertExpr . ']');
+        Assert::$assert($expected, $content);
+    }
+
+    /**
      * @return mixed
      */
     private function getResponseContent()
@@ -295,4 +335,22 @@ final class ApiContext implements Context
         return $this->jsonDecode($this->response->getContent());
     }
 
+    /**
+     * @param User $user
+     */
+    protected function saveMe(User $user): void
+    {
+        $this->bucket['me'] = $user;
+    }
+
+    /**
+     * @return User|null
+     */
+    protected function getMe(): ?User
+    {
+        if (isset($this->bucket['me'])) {
+            return $this->bucket['me'];
+        }
+        return null;
+    }
 }

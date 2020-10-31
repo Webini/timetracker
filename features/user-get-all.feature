@@ -3,6 +3,7 @@ Feature:
   As any logged user i want to be able to search user with a keywords
   in email and first name / last name field, i also want to have a pagination
   to avoid retrieving big bunch of data
+  As an anonymous i can't search
 
   Scenario: As an admin i'll search one user by email
     Given i am an user of type admin

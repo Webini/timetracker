@@ -1,8 +1,9 @@
 Feature:
-  In order to update informations about users
+  In order to update information about users
   As a super administrator i want to edit everybody
-  As an administrator i want to edit everybody except super administrators
+  As an administrator i want to edit everybody except super admin and other admin
   As myself, i want to update myself
+  As an anonymous i can't edit anybody
 
   Scenario: As a Super Administrator i can update another Super Administrator
     Given i am an user of type super admin
@@ -39,7 +40,7 @@ Feature:
   Scenario: As an user i can edit myself
     Given i am an user of type user
     When i set to [request][content][firstName] value "New First Name"
-    And i set to [route][params][user] the value of [user].id
+    And i set to [route][params][user] the value of [me].id
     And i send a patch on route api_users_update
     Then the status code should be 200
 

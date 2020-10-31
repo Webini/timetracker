@@ -3,8 +3,13 @@
 namespace App\Repository;
 
 use App\Entity\Project;
+use App\Entity\User;
+use App\Model\ProjectSearch;
+use App\Traits\AuthorizationCheckerAwareTrait;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * @method Project|null find($id, $lockMode = null, $lockVersion = null)
@@ -14,37 +19,63 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ProjectRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    use AuthorizationCheckerAwareTrait;
+
+    /**
+     * @var PaginatorInterface
+     */
+    private $paginator;
+
+    /**
+     * ProjectRepository constructor.
+     * @param ManagerRegistry $registry
+     */
+    public function __construct(ManagerRegistry $registry, PaginatorInterface $paginator)
     {
         parent::__construct($registry, Project::class);
+        $this->paginator = $paginator;
     }
 
-    // /**
-    //  * @return Project[] Returns an array of Project objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @param int|string|User $user
+     * @param ProjectSearch $search
+     * @return \Doctrine\ORM\QueryBuilder
+     */
+    public function getMyProjectsQuery($user, ProjectSearch $search)
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $qb = $this->createQueryBuilder('p');
 
-    /*
-    public function findOneBySomeField($value): ?Project
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        if (!$this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            $qb
+                ->leftJoin('p.assignedUsers', 'au')
+                ->andWhere('au.assigned = :me')
+                ->setParameter('me', $user)
+            ;
+        }
+
+        $keywords = $search->getSearch();
+        if ($keywords !== null) {
+            $qb
+                ->andWhere('LOWER(p.name) LIKE :keywords')
+                ->setParameter('name', '%' . $keywords . '%')
+            ;
+        }
+
+        return $qb;
     }
-    */
+
+    /**
+     * @param User $user
+     * @param ProjectSearch $search
+     * @return \Knp\Component\Pager\Pagination\PaginationInterface
+     */
+    public function searchMyProjectsPaginated(User $user, ProjectSearch $search)
+    {
+        return $this->paginator->paginate(
+            $this->getMyProjectsQuery($user, $search),
+            $search->getPage(),
+            $search->getLimit()
+        );
+    }
+
 }

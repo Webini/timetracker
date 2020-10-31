@@ -4,32 +4,19 @@
 namespace App\Normalizer;
 
 
-use App\Entity\User;
-use App\Manager\UserManager;
-use App\Security\Voter\UserVoter;
-use Gesdinet\JWTRefreshTokenBundle\EventListener\AttachRefreshTokenOnSuccessListener;
-use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManager;
-use Symfony\Component\HttpFoundation\Response;
+use App\Entity\Project;
+use App\Security\Voter\ProjectVoter;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Serializer\Exception\CircularReferenceException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Exception\LogicException;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerAwareTrait;
-use Symfony\Component\Serializer\SerializerInterface;
 
-class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
+class ProjectNormalizer implements NormalizerInterface, SerializerAwareInterface
 {
     use SerializerAwareTrait;
-
-    /**
-     * @var UserManager
-     */
-    private $userManager;
 
     /**
      * @var AuthorizationCheckerInterface
@@ -42,20 +29,16 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
     private $tokenStorage;
 
     /**
-     * UserNormalizer constructor.
-     * @param UserManager $userManager
+     * ProjectNormalizer constructor.
      * @param TokenStorageInterface $tokenStorage
      * @param AuthorizationCheckerInterface $authorizationChecker
      */
     public function __construct(
-        UserManager $userManager,
         TokenStorageInterface $tokenStorage,
         AuthorizationCheckerInterface $authorizationChecker
-    )
-    {
+    ) {
         $this->tokenStorage = $tokenStorage;
         $this->authorizationChecker = $authorizationChecker;
-        $this->userManager = $userManager;
     }
 
     /**
@@ -75,36 +58,15 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
 
         if (empty($context['groups'])) {
             $token = $this->tokenStorage->getToken();
-            if ($token && $this->authorizationChecker->isGranted(UserVoter::USER_READ_FULL, $object)) {
-                $context['groups'] = [ 'user_full' ];
+            if ($token && $this->authorizationChecker->isGranted(ProjectVoter::PROJECT_READ_FULL, $object)) {
+                $context['groups'] = [ 'project_full' ];
             } else {
-                $context['groups'] = [ 'user_short' ];
+                $context['groups'] = [ 'project_short' ];
             }
         }
 
-        $data = $this->serializer->normalize($object, $format, $context);
-        if (isset($context['jwt']) && $context['jwt']) {
-            $data = array_merge($this->retrieveTokens($object), $data);
-        }
-
-        return $data;
+        return $this->serializer->normalize($object, $format, $context);
     }
-
-    /**
-     * @param User $user
-     * @return array
-     */
-    private function retrieveTokens(User $user): array
-    {
-        $token = $this->userManager->getJwt($user);
-        $refreshToken = $this->userManager->getRefreshToken($user);
-
-        return [
-            'token' => $token,
-            'refreshToken' => $refreshToken,
-        ];
-    }
-
     /**
      * @param mixed $data
      * @param string|null $format
@@ -117,6 +79,6 @@ class UserNormalizer implements NormalizerInterface, SerializerAwareInterface
             return false;
         }
 
-        return $data instanceof User;
+        return $data instanceof Project;
     }
 }

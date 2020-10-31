@@ -4,6 +4,7 @@ Feature:
   As project managers, administrator and super administrator i want
   to retrieve full information of everyone
   As myself, i want to retrieve full information about me
+  As an anonymous i can't get user information
 
   Scenario: As a super administrator i can see the full information of anyone
     Given i am an user of type super admin
@@ -35,7 +36,7 @@ Feature:
     And i set to [route][params][user] the value of [users][u].id
     And i send a get on route api_users_get_one
     Then the status code should be 200
-    And the response should not have keys [phoneNumber],[email],[emailValidated]
+    And the response should not have keys [phoneNumber],[email],[emailValidated],[password],[plainPassword]
 
   Scenario: As an anonymous i can't get user information
     Given an user of type user saved in [users][u]

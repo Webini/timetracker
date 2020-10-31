@@ -17,16 +17,16 @@ class UserVoter extends Voter
     const USER_CREATE_PROJECT_MANAGER = 'USER_CREATE_PROJECT_MANAGER';
     const USER_CREATE_ADMIN = 'USER_CREATE_ADMIN';
     const USER_CREATE_SUPER_ADMIN = 'USER_CREATE_SUPER_ADMIN';
-    const USER_EDIT = 'USER_EDIT';
-    const USER_FULL_DATA = 'USER_FULL_DATA';
+    const USER_UPDATE = 'USER_UPDATE';
+    const USER_READ_FULL = 'USER_READ_FULL';
 
     const ALL_ATTRIBUTES = [
         self::USER_CREATE,
         self::USER_CREATE_PROJECT_MANAGER,
         self::USER_CREATE_ADMIN,
         self::USER_CREATE_SUPER_ADMIN,
-        self::USER_EDIT,
-        self::USER_FULL_DATA,
+        self::USER_UPDATE,
+        self::USER_READ_FULL,
     ];
 
     const ATTRIBUTES_WITHOUT_SUBJECT = [
@@ -37,11 +37,11 @@ class UserVoter extends Voter
     ];
 
     /**
-     * @param mixed $attribute
+     * @param string $attribute
      * @param mixed $subject
      * @return bool
      */
-    protected function supports($attribute, $subject)
+    protected function supports(string $attribute, $subject)
     {
         if (in_array($attribute, self::ATTRIBUTES_WITHOUT_SUBJECT)) {
             return true;
@@ -61,27 +61,27 @@ class UserVoter extends Voter
         }
 
         if ($attribute === self::USER_CREATE) {
-            return $this->canCreate($user);
+            return $this->canCreate();
         }
 
         if ($attribute === self::USER_CREATE_ADMIN) {
-            return $this->canCreateAdmin($user);
+            return $this->canCreateAdmin();
         }
 
         if ($attribute === self::USER_CREATE_PROJECT_MANAGER) {
-            return $this->canCreateProjectManager($user);
+            return $this->canCreateProjectManager();
         }
 
         if ($attribute === self::USER_CREATE_SUPER_ADMIN) {
-            return $this->canCreateSuperAdmin($user);
+            return $this->canCreateSuperAdmin();
         }
 
-        if ($attribute === self::USER_EDIT) {
-            return $this->canEdit($user, $subject);
+        if ($attribute === self::USER_UPDATE) {
+            return $this->canUpdate($user, $subject);
         }
 
-        if ($attribute === self::USER_FULL_DATA) {
-            return $this->canSeeFullData($user, $subject);
+        if ($attribute === self::USER_READ_FULL) {
+            return $this->canReadFullData($user, $subject);
         }
 
         return false;
@@ -93,71 +93,67 @@ class UserVoter extends Voter
      * @param User $other
      * @return bool
      */
-    public function canSeeFullData(User $user, User $other): bool
+    public function canReadFullData(User $user, User $other): bool
     {
         if ($user->getId() === $other->getId()) {
             return true;
         }
 
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER], $user);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]);
     }
 
     /**
-     * User can edit an other user only if he is administrator and his
-     * roles are superior to the other user's roles
+     * User can edit an other user only if he is super admin
+     * Admin can't edit super admin and other admin
      * @param User $user
      * @param User $other
      * @return bool
      */
-    public function canEdit(User $user, User $other): bool
+    public function canUpdate(User $user, User $other): bool
     {
         if ($user->getId() === $other->getId() ||
-            $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN], $user)) {
+            $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN])) {
             return true;
         }
 
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN], $user) &&
-            !$this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN], $other);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]) &&
+            !$other->hasOneRole(User::ROLE_SUPER_ADMIN | User::ROLE_ADMIN);
     }
 
     /**
      * Admin, Super Admin, Project manager can create user
-     * @param User|null $user
      * @return bool
      */
-    public function canCreate(User $user): bool
+    public function canCreate(): bool
     {
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER], $user);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]);
     }
 
     /**
      * Super Admin only can create admin
-     * @param User $user
      * @return bool
      */
-    public function canCreateAdmin(User $user): bool
+    public function canCreateAdmin(): bool
     {
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN], $user);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN]);
 
     }
 
     /**
      * Super Admin only can create super admin
-     * @param User $user
      * @return bool
      */
-    public function canCreateSuperAdmin(User $user): bool
+    public function canCreateSuperAdmin(): bool
     {
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN], $user);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_SUPER_ADMIN]);
     }
 
     /**
      * Admin, Super Admin can create project manager
-     * @param User $user
      * @return bool
      */
-    public function canCreateProjectManager(User $user): bool
+    public function canCreateProjectManager(): bool
     {
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN], $user);
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]);
     }
 }

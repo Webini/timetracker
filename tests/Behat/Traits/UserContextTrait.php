@@ -12,7 +12,7 @@ use http\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-trait UserTrait
+trait UserContextTrait
 {
     /**
      * @var UserManager|null
@@ -138,13 +138,14 @@ trait UserTrait
      */
     public function iSetMyJwtTo(string $path): void
     {
-        if ($this->bucket['user'] === null) {
+        $user = $this->getMe();
+        if ($user === null) {
             throw new RuntimeException('No user selected');
         }
 
         $this->accessor->setValue(
             $this->bucket, $path,
-            $this->userManager->getJwt($this->bucket['user'])
+            $this->userManager->getJwt($user)
         );
     }
 
@@ -154,14 +155,15 @@ trait UserTrait
      */
     public function iSetMyRefreshTokenTo( string $path): void
     {
-        if ($this->bucket['user'] === null) {
+        $user = $this->getMe();
+        if ($user === null) {
             throw new RuntimeException('No user selected');
         }
 
         $this->requestStack->push(Request::create('/'));
         $this->accessor->setValue(
             $this->bucket, $path,
-            $this->userManager->getRefreshToken($this->bucket['user'])
+            $this->userManager->getRefreshToken($user)
         );
         $this->requestStack->pop();
     }
@@ -172,6 +174,18 @@ trait UserTrait
      */
     public function iAmAnUserOfType(string $type): void
     {
-        $this->bucket['user'] = $this->getUserByType($type);
+        $this->saveMe($this->getUserByType($type));
     }
+
+    /**
+     * Save current user
+     * @param User $user
+     */
+    abstract protected function saveMe(User $user): void;
+
+    /**
+     * Retrieve saved user
+     * @return User|null
+     */
+    abstract protected function getMe(): ?User;
 }

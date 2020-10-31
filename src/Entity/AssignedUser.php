@@ -2,23 +2,32 @@
 
 namespace App\Entity;
 
-use App\Repository\AssignedProjectRepository;
+use App\Repository\AssignedUserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @ORM\Entity(repositoryClass=AssignedProjectRepository::class)
+ * @ORM\Entity(repositoryClass=AssignedUserRepository::class)
  */
-class AssignedProject
+class AssignedUser
 {
-    const PERMISSION_ADD_TASK = 1;
-    const PERMISSION_REMOVE_TASK = 2;
-    const PERMISSION_EDIT_TASK = 4;
-    const PERMISSION_PROJECT_ADMIN = 8;
+    use TimestampableEntity;
+
+    const PERMISSION_READ_TASK = 1;
+    const PERMISSION_CREATE_TASK = 2;
+    const PERMISSION_DELETE_TASK = 4;
+    const PERMISSION_UPDATE_TASK = 8;
+    const PERMISSION_PROJECT_ADMIN = 256;
+
+    const PERMISSIONS_TASK_CRUD = self::PERMISSION_READ_TASK | self::PERMISSION_CREATE_TASK | self::PERMISSION_DELETE_TASK | self::PERMISSION_UPDATE_TASK;
+    const PERMISSIONS_ALL = self::PERMISSIONS_TASK_CRUD | self::PERMISSION_PROJECT_ADMIN;
 
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({ "assigned_users_full" })
      */
     private $id;
 
@@ -36,8 +45,14 @@ class AssignedProject
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({ "assigned_users_full" })
      */
     private $permissions;
+
+    public function __construct()
+    {
+        $this->permissions = self::PERMISSION_READ_TASK;
+    }
 
     public function getId(): ?int
     {

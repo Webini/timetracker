@@ -74,7 +74,7 @@ class UserController extends AbstractFOSRestController
      */
     public function update(Request $request, User $user): View
     {
-        $this->denyAccessUnlessGranted(UserVoter::USER_EDIT, $user);
+        $this->denyAccessUnlessGranted(UserVoter::USER_UPDATE, $user);
         $form = $this->createForm(UserType::class, $user);
 
         $this->submitRequestContent($form, $request, false);
@@ -115,12 +115,12 @@ class UserController extends AbstractFOSRestController
      */
     public function search(Request $request): View
     {
-        $form = $this->createForm(UserSearchType::class, null, [ 'method' => 'GET' ]);
+        $form = $this->createForm(UserSearchType::class);
         $this->submitRequestQuery($form, $request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $repo = $this->em->getRepository(User::class);
-            return $this->view($repo->search($form->getData()));
+            return $this->view($repo->searchPaginated($form->getData()));
         }
 
         return $this->view($form);

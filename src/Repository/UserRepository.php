@@ -52,7 +52,7 @@ class UserRepository extends ServiceEntityRepository
      * @param UserSearch $search
      * @return PaginationInterface
      */
-    public function search(UserSearch $search)
+    public function searchPaginated(UserSearch $search)
     {
         return $this->paginator->paginate(
             $this->createSearchQuery($search),
