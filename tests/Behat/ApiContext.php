@@ -215,7 +215,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response (should|should not) have keys (\S+)$/
+     * @Then /^the response (should|should not) have keys (.+)$/
      * @param string $condition
      * @param string $keys
      */
@@ -290,7 +290,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (\S+)$/
+     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (.+)$/
      */
     public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $assertExpr, string $expected): void
     {
@@ -313,7 +313,7 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (\S+)$/
+     * @Then /^the response (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (.+)$/
      * @param string $condition
      * @param string $assertExpr
      * @param string $expected

@@ -7,6 +7,7 @@ namespace App\Tests\Behat\Traits;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Manager\ProjectManager;
+use Faker\Factory;
 
 trait ProjectContextTrait
 {
@@ -52,6 +53,18 @@ trait ProjectContextTrait
     {
         $me = $this->getMe();
         $project = $this->createProject($name, $me);
+        $this->accessor->setValue($this->bucket, $path, $project);
+    }
+
+    /**
+     * @Given /^a project saved in (\S+)$/
+     * @param string $path
+     */
+    public function addFakeProject(string $path): void
+    {
+        $faker = Factory::create();
+        $user = $this->createFakeUser(User::ROLE_PROJECT_MANAGER);
+        $project = $this->createProject($faker->title, $user);
         $this->accessor->setValue($this->bucket, $path, $project);
     }
 

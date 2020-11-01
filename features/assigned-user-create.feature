@@ -8,9 +8,8 @@ Feature:
 
   Scenario: As a super admin i could assign any users to any projects with any permission
     Given i am an user of type super admin
-    Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test SA" created by [users][pm] saved in [project]
+    Given an user of type user saved in [user][assigned]
+    Given a project saved in [project]
     Given i set to [request][content][assigned] the value of [users][assigned].id
     Given i set to [request][content][permissions] value 271
     Given i set to [route][params][project] the value of [project].id
@@ -20,8 +19,7 @@ Feature:
   Scenario: As an admin i could assign any users to any projects with any permission
     Given i am an user of type admin
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test admin" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i set to [request][content][assigned] the value of [users][assigned].id
     Given i set to [request][content][permissions] value 271
     Given i set to [route][params][project] the value of [project].id
@@ -41,8 +39,7 @@ Feature:
   Scenario: As a project manager i can't assign users to projects where i'm not admin
     Given i am an user of type project manager
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test project" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i set to [request][content][assigned] the value of [users][assigned].id
     Given i set to [request][content][permissions] value 15
     Given i set to [route][params][project] the value of [project].id
@@ -62,8 +59,7 @@ Feature:
   Scenario: As an user i can't assign anybody to any projects
     Given i am an user of type user
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test user" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i set to [request][content][assigned] the value of [users][assigned].id
     Given i set to [request][content][permissions] value 15
     Given i set to [route][params][project] the value of [project].id

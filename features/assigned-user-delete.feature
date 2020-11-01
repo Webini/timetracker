@@ -8,7 +8,7 @@ Feature:
   Scenario: As a super admin i can delete anyone
     Given i am an user of type super admin
     Given an user of type user saved in [users][assigned]
-    Given i create a project named "Test SA" saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
@@ -18,7 +18,7 @@ Feature:
   Scenario: As an admin i can delete anyone
     Given i am an user of type admin
     Given an user of type user saved in [users][assigned]
-    Given i create a project named "Test admin" saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
@@ -38,8 +38,7 @@ Feature:
   Scenario: As a project manager i can't delete users from project where i'm not admin
     Given i am an user of type project manager
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test nop" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
@@ -49,8 +48,7 @@ Feature:
   Scenario: As an user i can't delete users from any project
     Given i am an user of type user
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test nop" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id

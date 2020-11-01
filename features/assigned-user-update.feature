@@ -8,7 +8,7 @@ Feature:
   Scenario: As a super admin i can edit everybody
     Given i am an user of type super admin
     Given an user of type user saved in [user]
-    Given i create a project named "Test SA" saved in [project]
+    Given a project saved in [project]
     Given i assign user [user] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [user].id
@@ -21,7 +21,7 @@ Feature:
   Scenario: As an admin i can edit everybody
     Given i am an user of type admin
     Given an user of type user saved in [user]
-    Given i create a project named "Test admin" saved in [project]
+    Given a project saved in [project]
     Given i assign user [user] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [user].id
@@ -47,8 +47,7 @@ Feature:
   Scenario: As a project manager i can't edit users from projects where i'm not admin
     Given i am an user of type project manager
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test nop" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
@@ -59,8 +58,7 @@ Feature:
   Scenario: As an user i can't edit anyone
     Given i am an user of type user
     Given an user of type user saved in [users][assigned]
-    Given an user of type project manager saved in [users][pm]
-    Given a project named "Test nop" created by [users][pm] saved in [project]
+    Given a project saved in [project]
     Given i assign user [users][assigned] to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
@@ -68,7 +66,6 @@ Feature:
     When i send a patch on route api_projects_users_update
     Then the status code should be 403
 
-  @current
   Scenario: As an anonymous i can't do anything
     Given i set to [route][params][project] value 1
     Given i set to [route][params][user] value 1

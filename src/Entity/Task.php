@@ -39,6 +39,11 @@ class Task
     private $name;
 
     /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $description;
+
+    /**
      * @ORM\Column(type="boolean", options={"default": false})
      */
     private $archived = false;
@@ -78,18 +83,6 @@ class Task
     public function setProject(?Project $project): self
     {
         $this->project = $project;
-
-        return $this;
-    }
-
-    public function getStartedAt(): ?\DateTimeInterface
-    {
-        return $this->startedAt;
-    }
-
-    public function setStartedAt(?\DateTimeInterface $startedAt): self
-    {
-        $this->startedAt = $startedAt;
 
         return $this;
     }
@@ -145,6 +138,18 @@ class Task
                 $time->setTask(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }
