@@ -4,6 +4,7 @@
 namespace App\Tests\Behat;
 
 use App\Tests\Behat\Traits\AssignedUserContextTrait;
+use App\Tests\Behat\Traits\TaskContextTrait;
 use App\Traits\EntityManagerAwareTrait;
 use App\Entity\User;
 use App\Tests\Behat\Traits\ProjectContextTrait;
@@ -11,6 +12,7 @@ use App\Tests\Behat\Traits\RouterAwareTrait;
 use App\Tests\Behat\Traits\UserContextTrait;
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
+use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -25,6 +27,7 @@ final class ApiContext implements Context
     use UserContextTrait;
     use ProjectContextTrait;
     use AssignedUserContextTrait;
+    use TaskContextTrait;
 
     const ASSERT_MAP = [
         'should' => [
@@ -56,11 +59,6 @@ final class ApiContext implements Context
      * @var Response|null
      */
     private $response;
-
-    /**
-     * @var User|null
-     */
-    private $user;
 
     /**
      * @var array
@@ -352,5 +350,16 @@ final class ApiContext implements Context
             return $this->bucket['me'];
         }
         return null;
+    }
+
+    /**
+     * @BeforeScenario
+     */
+    public function clearData(): void
+    {
+        $this->bucket = [];
+        $this->response = null;
+        $purger = new ORMPurger($this->em);
+        $purger->purge();
     }
 }

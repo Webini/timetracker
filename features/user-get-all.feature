@@ -7,16 +7,18 @@ Feature:
 
   Scenario: As an admin i'll search one user by email
     Given i am an user of type admin
-    And i set to [request][parameters][search] value "admin@fixture.fr"
-    And i send a get on route api_users_search
+    Given an user of type user saved in [user]
+    Given i set to [request][parameters][search] the value of [user].email
+    When i send a get on route api_users_search
     Then the response should be successful
     And the response item [data] should not be empty
-    And the response item [data][0][email] should be equal to "admin@fixture.fr"
+    And the response item [data][0][email] should not be empty
     And the response item [pagination][totalCount] should be greater than 0
 
-  Scenario: As an user will i'll search all users
+  Scenario: As an user i'll search all users
     Given i am an user of type user
-    And i send a get on route api_users_search
+    Given an user of type user saved in [trash]
+    When i send a get on route api_users_search
     Then the response should be successful
     And the response item [data] should not be empty
     And the response item [pagination][totalCount] should be greater than 1

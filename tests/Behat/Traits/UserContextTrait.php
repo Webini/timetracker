@@ -4,11 +4,10 @@
 namespace App\Tests\Behat\Traits;
 
 
-use App\DataFixtures\UserFixtures;
 use App\Entity\User;
 use App\Manager\UserManager;
 use Faker\Factory;
-use http\Exception\RuntimeException;
+use \RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -63,13 +62,18 @@ trait UserContextTrait
         ;
     }
 
-    private function createFakeUser($role = User::ROLE_USER): User
+    /**
+     * @param int $role
+     * @param string|null $email
+     * @return User
+     */
+    private function createFakeUser($role = User::ROLE_USER, string $email = null): User
     {
         $faker = Factory::create();
 
         $user = $this
             ->userManager->create()
-            ->setEmail($faker->email)
+            ->setEmail($email ?? $faker->email)
             ->setRoles($role)
             ->setFirstName($faker->firstName)
             ->setLastName($faker->lastName)
@@ -98,26 +102,7 @@ trait UserContextTrait
             case "project manager":
                 return $this->createFakeUser(User::ROLE_PROJECT_MANAGER);
         }
-        throw new \RuntimeException('Invalid user type ' . $type);
-    }
-
-    /**
-     * @param string $type
-     * @return User
-     */
-    private function getUserByType(string $type): User
-    {
-        switch ($type) {
-            case "user":
-                return $this->findOneUserByMail(UserFixtures::EMAIL_USER);
-            case "admin":
-                return $this->findOneUserByMail(UserFixtures::EMAIL_ADMIN);
-            case "super admin":
-                return $this->findOneUserByMail(UserFixtures::EMAIL_SUPER_ADMIN);
-            case "project manager":
-                return $this->findOneUserByMail(UserFixtures::EMAIL_PROJECT_MANAGER);
-        }
-        throw new \RuntimeException('Invalid user type ' . $type);
+        throw new RuntimeException('Invalid user type ' . $type);
     }
 
     /**
@@ -153,7 +138,7 @@ trait UserContextTrait
      * @When /^i set my refresh token value to (.+)$/
      * @param string $path
      */
-    public function iSetMyRefreshTokenTo( string $path): void
+    public function iSetMyRefreshTokenTo(string $path): void
     {
         $user = $this->getMe();
         if ($user === null) {
@@ -174,7 +159,7 @@ trait UserContextTrait
      */
     public function iAmAnUserOfType(string $type): void
     {
-        $this->saveMe($this->getUserByType($type));
+        $this->saveMe($this->createFakeUserByType($type));
     }
 
     /**

@@ -77,7 +77,7 @@ class AssignedUsersController extends AbstractFOSRestController
         $this->denyAccessUnlessGranted(AssignedUserVoter::ASSIGNED_USER_UPDATE, $project);
 
         $form = $this->createForm(AssignedUserType::class, $assignedUser);
-        $this->submitRequestContent($form, $request);
+        $this->submitRequestContent($form, $request, false);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();

@@ -1,25 +1,22 @@
-# This file contains a user story for demonstration only.
-# Learn how to get started with Behat and BDD on Behat's website:
-# http://behat.org/en/latest/quick_start.html
-
 Feature:
     In order to prove the connection mechanism is working
-    As a non logged user i want to create an account
     As a non logged user i want to login with my account
     As a logged user i want to refresh my token
-
+    As an anonymous user i can create an account
+    As an anonymous i can't create an account with an already used email
 
     Scenario: User will try to connect with correct password
-        When i set to [request][content][email] value "user@fixture.fr"
-        And i set to [request][content][password] value "demopassword"
-        And i send a post on route api_auth_login
+        Given an user of type user saved in [user]
+        Given i set to [request][content][email] the value of [user].email
+        Given i set to [request][content][password] the value of [user].plainPassword
+        When i send a post on route api_auth_login
         Then the response should be successful
 
     Scenario: User will try to connect with incorrect password
         When i set to [request][content][email] value "user@fixture.fr"
         And i set to [request][content][password] value "invalid"
         And i send a post on route api_auth_login
-        Then the response should not be successful
+        Then the response should not be successful 
 
     Scenario: User will try to refresh his token
         Given i am an user of type user

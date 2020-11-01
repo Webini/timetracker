@@ -2,3 +2,8 @@ api_projects_tasks_create:
   path: /
   defaults: { _controller: 'App\Controller\Api\TaskController::create' }
   methods: [ 'PUT' ]
+
+api_projects_tasks_update:
+  path: /{task}
+  defaults: { _controller: 'App\Controller\Api\TaskController::update' }
+  methods: [ 'PATCH' ]

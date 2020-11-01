@@ -8,6 +8,7 @@ use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Form\Entity\TaskType;
+use App\Manager\AssignedUserManager;
 use App\Manager\TaskManager;
 use App\Security\Voter\TaskVoter;
 use App\Traits\EntityManagerAwareTrait;
@@ -27,26 +28,28 @@ class TaskController extends AbstractFOSRestController
     private $taskManager;
 
     /**
+     * @var AssignedUserManager
+     */
+    private $assignedUserManager;
+
+    /**
      * TaskController constructor.
      * @param TaskManager $taskManager
      */
-    public function __construct(TaskManager $taskManager)
+    public function __construct(TaskManager $taskManager, AssignedUserManager $assignedUserManager)
     {
+        $this->assignedUserManager = $assignedUserManager;
         $this->taskManager = $taskManager;
     }
 
     /**
-     * Entity("task", expr="repository.findOneForProject(project, task)")
      * @param Request $request
      * @param Project $project
      * @return View
      */
     public function create(Request $request, Project $project): View
     {
-        $assignedUser = $this->em
-            ->getRepository(AssignedUser::class)
-            ->findForProjectAndUser($project, $this->getUser())
-        ;
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $this->getUser());
         $this->denyAccessUnlessGranted(TaskVoter::TASK_CREATE, $assignedUser);
 
         $form = $this->createForm(TaskType::class, null, [ 'creation' => true ]);
@@ -57,6 +60,27 @@ class TaskController extends AbstractFOSRestController
             $this->em->persist($task);
             $this->em->flush();
 
+            return $this->view($task);
+        }
+
+        return $this->view($form);
+    }
+
+    /**
+     * @Entity("task", expr="repository.findOneForProject(project, task)")
+     * @param Request $request
+     * @param Task $task
+     * @return View
+     */
+    public function update(Request $request, Task $task): View
+    {
+        $this->denyAccessUnlessGranted(TaskVoter::TASK_UPDATE, $task);
+
+        $form = $this->createForm(TaskType::class, $task);
+        $this->submitRequestContent($form, $request, false);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->em->flush();
             return $this->view($task);
         }
 

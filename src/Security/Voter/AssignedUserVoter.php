@@ -5,6 +5,7 @@ namespace App\Security\Voter;
 use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Manager\AssignedUserManager;
 use App\Traits\AuthorizationCheckerAwareTrait;
 use App\Traits\EntityManagerAwareTrait;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -20,6 +21,19 @@ class AssignedUserVoter extends Voter
     const ASSIGNED_USER_READ = 'ASSIGNED_USER_READ';
     const ASSIGNED_USER_DELETE = 'ASSIGNED_USER_DELETE';
     const ASSIGNED_USER_UPDATE = 'ASSIGNED_USER_UPDATE';
+    /**
+     * @var AssignedUserManager
+     */
+    private $assignedUserManager;
+
+    /**
+     * AssignedUserVoter constructor.
+     * @param AssignedUserManager $assignedUserManager
+     */
+    public function __construct(AssignedUserManager $assignedUserManager)
+    {
+        $this->assignedUserManager = $assignedUserManager;
+    }
 
     /**
      * @param string $attribute
@@ -65,17 +79,6 @@ class AssignedUserVoter extends Voter
     }
 
     /**
-     * @param User $user
-     * @param Project $project
-     * @return AssignedUser|null
-     */
-    private function getAssignedUser(User $user, Project $project): ?AssignedUser
-    {
-        $assignedUserRepo = $this->em->getRepository(AssignedUser::class);
-        return $assignedUserRepo->findForProjectAndUser($project, $user);
-    }
-
-    /**
      * Admin / SA can edit everyone
      * Project manager can edit users only if they are project's admin
      * Other can't edit
@@ -94,7 +97,7 @@ class AssignedUserVoter extends Voter
             return false;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         return $assignedUser && $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
 
     }
@@ -118,7 +121,7 @@ class AssignedUserVoter extends Voter
             return false;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         return $assignedUser && $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
     }
 
@@ -141,7 +144,7 @@ class AssignedUserVoter extends Voter
             return false;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         return $assignedUser && $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
     }
 
@@ -164,7 +167,7 @@ class AssignedUserVoter extends Voter
             return false;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         return $assignedUser && $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
     }
 }

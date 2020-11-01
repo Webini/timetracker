@@ -40,8 +40,8 @@ elif [[ "$1" == "behat" ]]; then
 
       (
           sleep 1
-          echo "Reload fixtures..."
-          gosu web ./bin/console doctrine:fixtures:load --purge-with-truncate -q
+#          echo "Reload fixtures..."
+#          gosu web ./bin/console doctrine:fixtures:load --purge-with-truncate -q
           echo "Behat time"
           gosu web ./vendor/bin/behat ${ARGUMENTS[@]} --strict < /dev/null
       )&

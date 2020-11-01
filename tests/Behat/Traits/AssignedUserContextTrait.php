@@ -68,7 +68,7 @@ trait AssignedUserContextTrait
             } else if ($perm === 'delete task') {
                 $result |= AssignedUser::PERMISSION_DELETE_TASK;
             } else if ($perm === 'admin') {
-                $result |= AssignedUser::PERMISSION_PROJECT_ADMIN;
+                $result |= AssignedUser::PERMISSIONS_ALL;
             } else if ($perm === 'crud') {
                 $result |= AssignedUser::PERMISSIONS_TASK_CRUD;
             } else {
@@ -80,12 +80,12 @@ trait AssignedUserContextTrait
     }
 
     /**
-     * @Given /^i assign user (\S+) to project (\S+) with permission ([(create task|read task|update task|delete task|admin|crud)\,]+)$/
+     * @Given /^an user (\S+) assigned to project (\S+) with permission ([(create task|read task|update task|delete task|admin|crud)\,]+)$/
      * @param string $userPath
      * @param string $projectPath
      * @param string $permissions
      */
-    public function iAssignUserToProject(string $userPath, string $projectPath, string $permissions): void
+    public function anUserAssignedToProject(string $userPath, string $projectPath, string $permissions): void
     {
         $user = $this->strictAccessor->getValue($this->bucket, $userPath);
         $project = $this->strictAccessor->getValue($this->bucket, $projectPath);

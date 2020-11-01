@@ -105,6 +105,7 @@ class UserVoter extends Voter
     /**
      * User can edit an other user only if he is super admin
      * Admin can't edit super admin and other admin
+     * Project managers can only edit users
      * @param User $user
      * @param User $other
      * @return bool
@@ -116,8 +117,17 @@ class UserVoter extends Voter
             return true;
         }
 
-        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]) &&
-            !$other->hasOneRole(User::ROLE_SUPER_ADMIN | User::ROLE_ADMIN);
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]) &&
+            !$other->hasOneRole(User::ROLE_SUPER_ADMIN | User::ROLE_ADMIN)) {
+            return true;
+        }
+
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]) &&
+            $other->getOriginalRoles() === User::ROLE_USER) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Security\Voter;
 use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\User;
+use App\Manager\AssignedUserManager;
 use App\Traits\AuthorizationCheckerAwareTrait;
 use App\Traits\EntityManagerAwareTrait;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -26,6 +27,19 @@ class ProjectVoter extends Voter
         self::PROJECT_READ_FULL,
         self::PROJECT_READ,
     ];
+    /**
+     * @var AssignedUserManager
+     */
+    private $assignedUserManager;
+
+    /**
+     * ProjectVoter constructor.
+     * @param AssignedUserManager $assignedUserManager
+     */
+    public function __construct(AssignedUserManager $assignedUserManager)
+    {
+        $this->assignedUserManager = $assignedUserManager;
+    }
 
     /**
      * @param string $attribute
@@ -75,17 +89,6 @@ class ProjectVoter extends Voter
     /**
      * @param User $user
      * @param Project $project
-     * @return AssignedUser|null
-     */
-    private function getAssignedUser(User $user, Project $project): ?AssignedUser
-    {
-        $assignedUserRepo = $this->em->getRepository(AssignedUser::class);
-        return $assignedUserRepo->findForProjectAndUser($project, $user);
-    }
-
-    /**
-     * @param User $user
-     * @param Project $project
      * @return bool
      */
     public function canRead(User $user, Project $project): bool
@@ -94,7 +97,7 @@ class ProjectVoter extends Voter
             return true;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         return $assignedUser !== null;
     }
 
@@ -109,7 +112,7 @@ class ProjectVoter extends Voter
             return true;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         if ($assignedUser !== null) {
             return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
         }
@@ -130,7 +133,7 @@ class ProjectVoter extends Voter
             return true;
         }
 
-        $assignedUser = $this->getAssignedUser($user, $project);
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
         if ($assignedUser !== null) {
             return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
         }

@@ -5,58 +5,36 @@ Feature:
   As an user i can't delete users from any project
   As an anonymous i can't do anything
 
-  Scenario: As a super admin i can delete anyone
-    Given i am an user of type super admin
+  Background:
     Given an user of type user saved in [users][assigned]
     Given a project saved in [project]
-    Given i assign user [users][assigned] to project [project] with permission crud
+    Given an user [users][assigned] assigned to project [project] with permission crud
     Given i set to [route][params][project] the value of [project].id
     Given i set to [route][params][user] the value of [users][assigned].id
+
+  Scenario Outline: As an admin / super admin i can delete anyone
+    Given i am an user of type <userType>
     When i send a delete on route api_projects_users_delete
     Then the status code should be 204
+    Examples:
+      | userType    |
+      | super admin |
+      | admin       |
 
-  Scenario: As an admin i can delete anyone
-    Given i am an user of type admin
-    Given an user of type user saved in [users][assigned]
-    Given a project saved in [project]
-    Given i assign user [users][assigned] to project [project] with permission crud
-    Given i set to [route][params][project] the value of [project].id
-    Given i set to [route][params][user] the value of [users][assigned].id
+  Scenario Outline:
+    As a project manager i can only delete users from project where i'm admin
+    As a project manager i can't delete users from project where i'm not admin
+    As an user i can't delete users from any project
+    Given i am an user of type <userType>
+    Given an user <assigned> assigned to project [project] with permission <permission>
     When i send a delete on route api_projects_users_delete
-    Then the status code should be 204
-
-  Scenario: As a project manager i can only delete users from project where i'm admin
-    Given i am an user of type project manager
-    Given an user of type user saved in [users][assigned]
-    Given i create a project named "Test PM" saved in [project]
-    Given i assign user [users][assigned] to project [project] with permission crud
-    Given i set to [route][params][project] the value of [project].id
-    Given i set to [route][params][user] the value of [users][assigned].id
-    When i send a delete on route api_projects_users_delete
-    Then the status code should be 204
-
-  Scenario: As a project manager i can't delete users from project where i'm not admin
-    Given i am an user of type project manager
-    Given an user of type user saved in [users][assigned]
-    Given a project saved in [project]
-    Given i assign user [users][assigned] to project [project] with permission crud
-    Given i set to [route][params][project] the value of [project].id
-    Given i set to [route][params][user] the value of [users][assigned].id
-    When i send a delete on route api_projects_users_delete
-    Then the status code should be 403
-
-  Scenario: As an user i can't delete users from any project
-    Given i am an user of type user
-    Given an user of type user saved in [users][assigned]
-    Given a project saved in [project]
-    Given i assign user [users][assigned] to project [project] with permission crud
-    Given i set to [route][params][project] the value of [project].id
-    Given i set to [route][params][user] the value of [users][assigned].id
-    When i send a delete on route api_projects_users_delete
-    Then the status code should be 403
+    Then the status code should be <expectedStatus>
+    Examples:
+     | userType        | assigned | permission | expectedStatus |
+     | project manager | [me]     | admin      | 204            |
+     | user            | [me]     | crud       | 403            |
+     | project manager | [me]     | crud       | 403            |
 
   Scenario: As an anonymous i can't do anything
-    Given i set to [route][params][project] value 1
-    Given i set to [route][params][user] value 1
     When i send a delete on route api_projects_users_delete
     Then the status code should be 401

@@ -57,7 +57,7 @@ class ProjectRepository extends ServiceEntityRepository
         if ($keywords !== null) {
             $qb
                 ->andWhere('LOWER(p.name) LIKE :keywords')
-                ->setParameter('name', '%' . $keywords . '%')
+                ->setParameter('keywords', '%' . mb_strtolower($keywords) . '%')
             ;
         }
 

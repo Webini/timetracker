@@ -6,73 +6,55 @@ Feature:
     As user i don't want to create anybody
     As an anonymous i can't create user
 
-    Scenario: As a super administrator i can create a super admin account
-        Given i am an user of type super admin
-        When i set to [request][content] values:
+    Scenario Outline:
+        As a super administrator i want to create any types of users
+        As an administrator i want to create project manager and users
+        Given i am an user of type <selfRole>
+        Given i set to [request][content] values:
         """
         {
           "firstName": "sa-sa",
           "lastName": "Edouard",
           "email": "sasa@edouard.com",
           "plainPassword": "test1234",
-          "roles": "ROLE_SUPER_ADMIN"
+          "roles": "<givenRole>"
         }
         """
-        And i send a put on route api_users_create
+        When i send a put on route api_users_create
         Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_SUPER_ADMIN"]
+        And the response item [roles] should be equal to ["<givenRole>"]
+        Examples:
+             | selfRole        | givenRole            |
+             | super admin     | ROLE_SUPER_ADMIN     |
+             | super admin     | ROLE_ADMIN           |
+             | super admin     | ROLE_PROJECT_MANAGER |
+             | super admin     | ROLE_USER            |
+             | admin           | ROLE_PROJECT_MANAGER |
+             | admin           | ROLE_USER            |
 
-    Scenario: As a super administrator i can create an admin account
-        Given i am an user of type super admin
-        When i set to [request][content] values:
-        """
-        {
-          "firstName": "sa-a",
-          "lastName": "Edouard",
-          "email": "sa-a@edouard.com",
-          "plainPassword": "test1234",
-          "roles": "ROLE_ADMIN"
-        }
-        """
-        And i send a put on route api_users_create
-        Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_ADMIN"]
-
-    Scenario: As an administrator i can't create an admin account
+    Scenario Outline: As an administrator i can't create an admin / super admin account
         Given i am an user of type admin
-        When i set to [request][content] values:
+        Given i set to [request][content] values:
         """
         {
           "firstName": "a-a",
           "lastName": "Edouard",
           "email": "a-a@edouard.com",
           "plainPassword": "test1234",
-          "roles": "ROLE_ADMIN"
+          "roles": "<role>"
         }
         """
-        And i send a put on route api_users_create
+        When i send a put on route api_users_create
         Then the status code should be 400
         And the response item [errors][children][roles][errors] should not be empty
-
-    Scenario: As an administrator i can create a project manager
-        Given i am an user of type admin
-        When i set to [request][content] values:
-        """
-        {
-          "firstName": "a-pm",
-          "lastName": "Edouard",
-          "email": "a-pm@edouard.com",
-          "plainPassword": "test1234",
-          "roles": "ROLE_PROJECT_MANAGER"
-        }
-        """
-        And i send a put on route api_users_create
-        Then the response should be successful
-        And the response item [roles] should be equal to ["ROLE_PROJECT_MANAGER"]
+        Examples:
+            | role             |
+            | ROLE_SUPER_ADMIN |
+            | ROLE_ADMIN       |
 
     Scenario: As a project manager i can't create a project manager
         Given i am an user of type project manager
-        When i set to [request][content] values:
+        Given i set to [request][content] values:
         """
         {
           "firstName": "pm-pm",
@@ -82,13 +64,13 @@ Feature:
           "roles": "ROLE_PROJECT_MANAGER"
         }
         """
-        And i send a put on route api_users_create
+        When i send a put on route api_users_create
         Then the status code should be 400
         And the response item [errors][errors] should not be empty
 
     Scenario: As a project manager i can create an user
         Given i am an user of type project manager
-        When i set to [request][content] values:
+        Given i set to [request][content] values:
         """
         {
           "firstName": "pm-u",
@@ -97,13 +79,13 @@ Feature:
           "plainPassword": "test1234"
         }
         """
-        And i send a put on route api_users_create
+        When i send a put on route api_users_create
         Then the response should be successful
         And the response item [roles] should be equal to ["ROLE_USER"]
 
     Scenario: As an user i can't create an user
         Given i am an user of type user
-        When i set to [request][content] values:
+        Given i set to [request][content] values:
         """
         {
           "firstName": "u-u",
@@ -112,10 +94,10 @@ Feature:
           "plainPassword": "test1234"
         }
         """
-        And i send a put on route api_users_create
+        When i send a put on route api_users_create
         Then the status code should be 403
 
     Scenario: As an anonymous i can't create user
-        When i set to [request][content] value {}
-        And i send a put on route api_users_create
+        Given i set to [request][content] value {}
+        When i send a put on route api_users_create
         Then the status code should be 401

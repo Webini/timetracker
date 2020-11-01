@@ -64,7 +64,7 @@ trait ProjectContextTrait
     {
         $faker = Factory::create();
         $user = $this->createFakeUser(User::ROLE_PROJECT_MANAGER);
-        $project = $this->createProject($faker->title, $user);
+        $project = $this->createProject($faker->sentence(), $user);
         $this->accessor->setValue($this->bucket, $path, $project);
     }
 
