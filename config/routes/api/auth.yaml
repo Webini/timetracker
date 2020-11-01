@@ -2,7 +2,7 @@ api_auth_login:
   path: /login
 
 api_auth_refresh_token:
-  path:     /refresh
+  path: /refresh
   defaults: { _controller: gesdinet.jwtrefreshtoken:refresh }
 
 api_auth_register:

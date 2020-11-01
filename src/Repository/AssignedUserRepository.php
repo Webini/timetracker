@@ -6,6 +6,7 @@ use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Cache;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;

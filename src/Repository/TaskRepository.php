@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,6 +18,29 @@ class TaskRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Task::class);
+    }
+
+    /**
+     * @param Project|int|string $project
+     * @param Task|int|string $task
+     * @return Task|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function findOneForProject($project, $task): ?Task
+    {
+        try {
+            return $this
+                ->createQueryBuilder('t')
+                ->where('t.project = :project')
+                ->setParameter('project', $project)
+                ->andWhere('t.id = :task')
+                ->setParameter('task', $task)
+                ->getQuery()
+                ->getSingleResult()
+            ;
+        } catch (NoResultException $e) {
+            return null;
+        }
     }
 
     // /**

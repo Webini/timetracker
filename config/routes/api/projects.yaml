@@ -26,4 +26,10 @@ api_projects_users:
   resource: assigned-users.yaml
   prefix: /{project}/users
   requirements:
-    user: "[0-9]+"
+    project: "[0-9]+"
+
+api_projects_tasks:
+  resource: tasks.yaml
+  prefix: /{project}/tasks
+  requirements:
+    project: "[0-9]+"

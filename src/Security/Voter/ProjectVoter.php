@@ -20,14 +20,11 @@ class ProjectVoter extends Voter
     const PROJECT_READ_FULL = 'PROJECT_READ_FULL';
     const PROJECT_READ = 'PROJECT_READ';
 
-//    const PROJECT_CREATE_TASK = 'PROJECT_CREATE_TASK';
-
     const ALLOWED_ATTRIBUTES = [
         self::PROJECT_CREATE,
         self::PROJECT_UPDATE,
         self::PROJECT_READ_FULL,
         self::PROJECT_READ,
-//        self::PROJECT_CREATE_TASK,
     ];
 
     /**
@@ -65,9 +62,6 @@ class ProjectVoter extends Voter
         if ($attribute === self::PROJECT_UPDATE) {
             return $this->canUpdate($user, $subject);
         }
-//        if ($attribute === self::PROJECT_CREATE_TASK) {
-//            return $this->canCreateTask($user, $subject);
-//        }
         if ($attribute === self::PROJECT_READ_FULL) {
             return $this->canReadFull($user, $subject);
         }
@@ -151,19 +145,4 @@ class ProjectVoter extends Voter
     {
         return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]);
     }
-
-    /**
-     * @param User $user
-     * @param Project $project
-     * @return bool
-     */
-//    public function canCreateTask(User $user, Project $project): bool
-//    {
-//        $assignedUser = $this->getAssignedUser($user, $project);
-//        if ($assignedUser !== null) {
-//            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_CREATE_TASK);
-//        }
-//
-//        return false;
-//    }
 }

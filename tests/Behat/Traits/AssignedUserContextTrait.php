@@ -71,8 +71,11 @@ trait AssignedUserContextTrait
                 $result |= AssignedUser::PERMISSION_PROJECT_ADMIN;
             } else if ($perm === 'crud') {
                 $result |= AssignedUser::PERMISSIONS_TASK_CRUD;
+            } else {
+                throw new \RuntimeException('Cannot found permission ' . $perm);
             }
         }
+
         return $result;
     }
 
