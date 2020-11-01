@@ -14,14 +14,14 @@ class AssignedUser
 {
     use TimestampableEntity;
 
-    const PERMISSION_READ_TASK = 1;
-    const PERMISSION_CREATE_TASK = 2;
-    const PERMISSION_DELETE_TASK = 4;
-    const PERMISSION_UPDATE_TASK = 8;
+    const PERMISSION_NONE = 0;
+    const PERMISSION_CREATE_TASK = 1;
+    const PERMISSION_DELETE_TASK = 2;
+    const PERMISSION_UPDATE_TASK = 4;
     const PERMISSION_PROJECT_ADMIN = 256;
 
-    const PERMISSIONS_TASK_CRUD = self::PERMISSION_READ_TASK | self::PERMISSION_CREATE_TASK | self::PERMISSION_DELETE_TASK | self::PERMISSION_UPDATE_TASK;
-    const PERMISSIONS_ALL = self::PERMISSIONS_TASK_CRUD | self::PERMISSION_PROJECT_ADMIN;
+    const PERMISSIONS_TASK_CUD = self::PERMISSION_CREATE_TASK | self::PERMISSION_DELETE_TASK | self::PERMISSION_UPDATE_TASK;
+    const PERMISSIONS_ALL = self::PERMISSIONS_TASK_CUD | self::PERMISSION_PROJECT_ADMIN;
 
     /**
      * @ORM\Id
@@ -51,7 +51,7 @@ class AssignedUser
 
     public function __construct()
     {
-        $this->permissions = self::PERMISSION_READ_TASK;
+        $this->permissions = 0;
     }
 
     public function getId(): ?int

@@ -5,6 +5,7 @@ namespace App\Form\Entity;
 
 
 use App\Entity\User;
+use App\Manager\TimeZoneManager;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -27,14 +28,19 @@ class UserType extends AbstractType
      * @var TokenStorageInterface
      */
     private $tokenStorage;
+    /**
+     * @var TimeZoneManager
+     */
+    private $timeZoneManager;
 
     /**
      * UserType constructor.
      * @param TokenStorageInterface $tokenStorage
      * @param AuthorizationCheckerInterface $authorizationChecker
      */
-    public function __construct(TokenStorageInterface $tokenStorage, AuthorizationCheckerInterface $authorizationChecker)
+    public function __construct(TokenStorageInterface $tokenStorage, AuthorizationCheckerInterface $authorizationChecker, TimeZoneManager $timeZoneManager)
     {
+        $this->timeZoneManager = $timeZoneManager;
         $this->tokenStorage = $tokenStorage;
         $this->authorizationChecker = $authorizationChecker;
     }
@@ -49,7 +55,11 @@ class UserType extends AbstractType
             ->add('firstName', TextType::class)
             ->add('lastName', TextType::class)
             ->add('phoneNumber', TelType::class)
-            ->add('email', EmailType::class, [ 'constraints' => new NotBlank() ])
+            ->add('email', EmailType::class)
+            ->add('timeZone', ChoiceType::class, [
+                'choices' => $this->timeZoneManager->getAll(),
+                'multiple' => false,
+            ])
         ;
 
         if ($options['with_password']) {

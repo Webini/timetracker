@@ -5,6 +5,7 @@ namespace App\Tests\Behat;
 
 use App\Tests\Behat\Traits\AssignedUserContextTrait;
 use App\Tests\Behat\Traits\TaskContextTrait;
+use App\Tests\Behat\Traits\TaskTimerTrait;
 use App\Traits\EntityManagerAwareTrait;
 use App\Entity\User;
 use App\Tests\Behat\Traits\ProjectContextTrait;
@@ -28,6 +29,7 @@ final class ApiContext implements Context
     use ProjectContextTrait;
     use AssignedUserContextTrait;
     use TaskContextTrait;
+    use TaskTimerTrait;
 
     const ASSERT_MAP = [
         'should' => [

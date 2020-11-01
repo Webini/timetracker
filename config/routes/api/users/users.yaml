@@ -1,0 +1,29 @@
+api_users_create:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\User\UserController::createLogged' }
+  methods: [ 'PUT' ]
+
+api_users_update:
+  path: /{user}
+  defaults: { _controller: 'App\Controller\Api\User\UserController::update' }
+  methods: [ 'PATCH' ]
+  requirements:
+    user: "[0-9]+"
+
+api_users_get_one:
+  path: /{user}
+  defaults: { _controller: 'App\Controller\Api\User\UserController::getOne' }
+  methods: [ 'GET' ]
+  requirements:
+    user: "[0-9]+"
+
+api_users_search:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\User\UserController::search' }
+  methods: [ 'GET' ]
+
+api_projects_timers:
+  resource: timers.yaml
+  prefix: /{user}/timers
+  requirements:
+    user: "[0-9]+"

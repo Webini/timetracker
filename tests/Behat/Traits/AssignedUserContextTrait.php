@@ -34,7 +34,7 @@ trait AssignedUserContextTrait
      * @param int $permissions
      * @return AssignedUser
      */
-    private function createAssignedUser(Project $project, User $user, int $permissions = AssignedUser::PERMISSIONS_TASK_CRUD): AssignedUser
+    private function createAssignedUser(Project $project, User $user, int $permissions = AssignedUser::PERMISSIONS_TASK_CUD): AssignedUser
     {
         $assignedUser = $this->assignedUserManager->create(
             $project, $user
@@ -59,18 +59,20 @@ trait AssignedUserContextTrait
         $result = 0;
         foreach ($permissions as $perm) {
             $perm = trim($perm);
+            if ($perm === 'none') {
+                continue;
+            }
+
             if ($perm === 'create task') {
                 $result |= AssignedUser::PERMISSION_CREATE_TASK;
-            } else if ($perm === 'read task') {
-                $result |= AssignedUser::PERMISSION_READ_TASK;
             } else if ($perm === 'update task') {
                 $result |= AssignedUser::PERMISSION_UPDATE_TASK;
             } else if ($perm === 'delete task') {
                 $result |= AssignedUser::PERMISSION_DELETE_TASK;
             } else if ($perm === 'admin') {
                 $result |= AssignedUser::PERMISSIONS_ALL;
-            } else if ($perm === 'crud') {
-                $result |= AssignedUser::PERMISSIONS_TASK_CRUD;
+            } else if ($perm === 'cud') {
+                $result |= AssignedUser::PERMISSIONS_TASK_CUD;
             } else {
                 throw new \RuntimeException('Cannot found permission ' . $perm);
             }
@@ -80,7 +82,7 @@ trait AssignedUserContextTrait
     }
 
     /**
-     * @Given /^an user (\S+) assigned to project (\S+) with permission ([(create task|read task|update task|delete task|admin|crud)\,]+)$/
+     * @Given /^an user (\S+) assigned to project (\S+) with permission ([(none|create task|update task|delete task|admin|cud)\,]+)$/
      * @param string $userPath
      * @param string $projectPath
      * @param string $permissions

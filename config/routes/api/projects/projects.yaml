@@ -1,0 +1,35 @@
+api_projects_create:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\Project\ProjectController::create' }
+  methods: [ 'PUT' ]
+
+api_projects_update:
+  path: /{project}
+  defaults: { _controller: 'App\Controller\Api\Project\ProjectController::update' }
+  methods: [ 'PATCH' ]
+  requirements:
+    user: "[0-9]+"
+
+api_projects_get_one:
+  path: /{project}
+  defaults: { _controller: 'App\Controller\Api\Project\ProjectController::getOne' }
+  methods: [ 'GET' ]
+  requirements:
+    user: "[0-9]+"
+
+api_projects_search:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\Project\ProjectController::search' }
+  methods: [ 'GET' ]
+
+api_projects_users:
+  resource: assigned-users.yaml
+  prefix: /{project}/users
+  requirements:
+    project: "[0-9]+"
+
+api_projects_tasks:
+  resource: tasks.yaml
+  prefix: /{project}/tasks
+  requirements:
+    project: "[0-9]+"

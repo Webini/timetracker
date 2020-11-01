@@ -1,0 +1,19 @@
+api_projects_tasks_create:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\Project\TaskController::create' }
+  methods: [ 'PUT' ]
+
+api_projects_tasks_update:
+  path: /{task}
+  defaults: { _controller: 'App\Controller\Api\Project\TaskController::update' }
+  methods: [ 'PATCH' ]
+
+api_projects_tasks_get_one:
+  path: /{task}
+  defaults: { _controller: 'App\Controller\Api\Project\TaskController::getOne' }
+  methods: [ 'GET' ]
+
+api_projects_tasks_search:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\Project\TaskController::search' }
+  methods: [ 'GET' ]

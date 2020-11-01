@@ -7,5 +7,5 @@ api_auth_refresh_token:
 
 api_auth_register:
   path: /register
-  defaults: { _controller: 'App\Controller\Api\UserController::create' }
+  defaults: { _controller: 'App\Controller\Api\User\UserController::create' }
   methods: [ 'PUT' ]

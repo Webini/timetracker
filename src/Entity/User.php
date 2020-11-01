@@ -49,6 +49,7 @@ class User implements \Serializable, UserInterface
     /**
      * @var string|null
      * @Assert\Email()
+     * @Assert\NotBlank()
      * @ORM\Column(type="string", nullable=true, unique=true)
      * @Groups({ "user_full" })
      */
@@ -112,6 +113,14 @@ class User implements \Serializable, UserInterface
      * @ORM\OneToMany(targetEntity=AssignedUser::class, cascade={"persist"}, mappedBy="assigned", orphanRemoval=true)
      */
     private $assignedProjects;
+
+    /**
+     * @var string|null
+     * @Assert\NotBlank()
+     * @ORM\Column(type="string", length=255)
+     * @Groups({ "user_full", "user_short" })
+     */
+    private $timeZone;
 
     public function __construct()
     {
@@ -449,6 +458,25 @@ class User implements \Serializable, UserInterface
                 $assignedProject->setAssigned(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTimeZone(): ?string
+    {
+        return $this->timeZone;
+    }
+
+    /**
+     * @param string $timeZone
+     * @return $this
+     */
+    public function setTimeZone(string $timeZone): self
+    {
+        $this->timeZone = $timeZone;
 
         return $this;
     }

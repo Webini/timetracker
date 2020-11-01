@@ -3,11 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\TaskRepository;
+use App\Traits\BlameableEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\TaskTimer;
 
 /**
  * @ORM\Entity(repositoryClass=TaskRepository::class)
@@ -15,16 +18,19 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Task
 {
     use TimestampableEntity;
+    use BlameableEntity;
 
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({ "task_full" })
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({ "task_full" })
      */
     private $externalId;
 
@@ -37,27 +43,30 @@ class Task
     /**
      * @ORM\Column(type="string", length=1024)
      * @Assert\NotBlank()
+     * @Groups({ "task_full" })
      */
     private $name;
 
     /**
      * @ORM\Column(type="text", nullable=true)
+     * @Groups({ "task_full" })
      */
     private $description;
 
     /**
      * @ORM\Column(type="boolean", options={"default": false})
+     * @Groups({ "task_full" })
      */
     private $archived = false;
 
     /**
-     * @ORM\OneToMany(targetEntity=TaskTime::class, mappedBy="task", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=TaskTimer::class, mappedBy="task", orphanRemoval=true)
      */
-    private $times;
+    private $timers;
 
     public function __construct()
     {
-        $this->times = new ArrayCollection();
+        $this->timers = new ArrayCollection();
         $this->archived = false;
     }
 
@@ -115,30 +124,30 @@ class Task
     }
 
     /**
-     * @return Collection|TaskTime[]
+     * @return Collection|TaskTimer[]
      */
-    public function getTimes(): Collection
+    public function getTimers(): Collection
     {
-        return $this->times;
+        return $this->timers;
     }
 
-    public function addTime(TaskTime $time): self
+    public function addTimer(TaskTimer $timer): self
     {
-        if (!$this->times->contains($time)) {
-            $this->times[] = $time;
-            $time->setTask($this);
+        if (!$this->timers->contains($timer)) {
+            $this->timers[] = $timer;
+            $timer->setTask($this);
         }
 
         return $this;
     }
 
-    public function removeTime(TaskTime $time): self
+    public function removeTimer(TaskTimer $timer): self
     {
-        if ($this->times->contains($time)) {
-            $this->times->removeElement($time);
+        if ($this->timers->contains($timer)) {
+            $this->timers->removeElement($timer);
             // set the owning side to null (unless already changed)
-            if ($time->getTask() === $this) {
-                $time->setTask(null);
+            if ($timer->getTask() === $this) {
+                $timer->setTask(null);
             }
         }
 

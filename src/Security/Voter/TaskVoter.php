@@ -3,6 +3,7 @@
 namespace App\Security\Voter;
 
 use App\Entity\AssignedUser;
+use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\User;
 use App\Manager\AssignedUserManager;
@@ -17,9 +18,11 @@ class TaskVoter extends Voter
 
     const TASK_CREATE = 'TASK_CREATE';
     const TASK_UPDATE = 'TASK_UPDATE';
+    const TASK_READ = 'TASK_READ';
 
     const TASK_ATTRIBUTES = [
-        self::TASK_UPDATE
+        self::TASK_UPDATE,
+        self::TASK_READ,
     ];
     /**
      * @var AssignedUserManager
@@ -70,10 +73,12 @@ class TaskVoter extends Voter
         if ($attribute === self::TASK_UPDATE) {
             return $this->canUpdate($user, $subject);
         }
+        if ($attribute === self::TASK_READ) {
+            return $this->canRead($user, $subject);
+        }
 
         return false;
     }
-
     /**
      * Admin / SA can always create tasks
      * Project manager / user can create only if they have the permission
@@ -97,12 +102,13 @@ class TaskVoter extends Voter
     /**
      * Admin / super admin can edit any tasks
      * Project manager / users can edit only if they have the permission
+     * Project manager / users can edit task they have created
      * Other can't edit
      * @param User $user
      * @param Task $task
      * @return bool
      */
-    public function canUpdate(User $user, Task $task): bool
+    private function canUpdate(User $user, Task $task): bool
     {
         if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
             return true;
@@ -113,6 +119,32 @@ class TaskVoter extends Voter
             return false;
         }
 
-        return $assignedUser->hasPermissions(AssignedUser::PERMISSION_UPDATE_TASK);
+        if ($assignedUser->hasPermissions(AssignedUser::PERMISSION_UPDATE_TASK)) {
+            return true;
+        }
+
+        $createdBy = $task->getCreatedBy();
+        if ($createdBy && $createdBy->getId() === $user->getId()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * admin / super admin can read all tasks
+     * PM / users can read only tasks where they are assigned
+     * Anon can read nothing
+     * @param User $user
+     * @param Task $task
+     * @return bool
+     */
+    private function canRead(User $user, Task $task): bool
+    {
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        return !!$this->assignedUserManager->getAssignedUserFor($task->getProject(), $user);
     }
 }

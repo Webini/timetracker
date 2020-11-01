@@ -33,7 +33,7 @@ security:
                 require_previous_session: false
 
         api:
-            pattern: ^/api(?!/auth/.*).*$ #^/api.*(?<!\.html)$
+            pattern: ^/api(?!/auth/.*|/timezones.*).*$ #^/api.*(?<!\.html)$
             stateless: true
             provider: in_database_users
             guard:
@@ -49,4 +49,5 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/api/auth, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/timezones, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }

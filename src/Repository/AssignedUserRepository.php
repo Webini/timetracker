@@ -32,19 +32,15 @@ class AssignedUserRepository extends ServiceEntityRepository
      */
     public function findForProjectAndUser($project, $user): ?AssignedUser
     {
-        try {
-            return $this
-                ->createQueryBuilder('a')
-                ->where('a.project = :project')
-                ->setParameter('project', $project)
-                ->andWhere('a.assigned = :user')
-                ->setParameter('user', $user)
-                ->getQuery()
-                ->getSingleResult()
-            ;
-        } catch (NoResultException $e) {
-            return null;
-        }
+        return $this
+            ->createQueryBuilder('a')
+            ->where('a.project = :project')
+            ->setParameter('project', $project)
+            ->andWhere('a.assigned = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
     }
 
     /**

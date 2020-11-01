@@ -29,7 +29,7 @@ Feature:
 
   Scenario: As a project manager without project admin permission i must not see full information
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission crud
+    Given an user [me] assigned to project [project] with permission cud
     When i send a get on route api_projects_get_one
     Then the status code should be 200
     Then the response should not have keys [guid],[providerConfiguration]
@@ -37,7 +37,7 @@ Feature:
 
   Scenario: As an user without project admin permission i must not see full information
     Given i am an user of type user
-    Given an user [me] assigned to project [project] with permission crud
+    Given an user [me] assigned to project [project] with permission cud
     When i send a get on route api_projects_get_one
     Then the status code should be 200
     Then the response should not have keys [guid],[providerConfiguration]

@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Model\ProjectSearch;
 use App\Traits\AuthorizationCheckerAwareTrait;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -39,9 +40,9 @@ class ProjectRepository extends ServiceEntityRepository
     /**
      * @param int|string|User $user
      * @param ProjectSearch $search
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
-    public function getMyProjectsQuery($user, ProjectSearch $search)
+    private function getMyProjectsQuery($user, ProjectSearch $search): QueryBuilder
     {
         $qb = $this->createQueryBuilder('p');
 

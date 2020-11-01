@@ -79,6 +79,7 @@ trait UserContextTrait
             ->setLastName($faker->lastName)
             ->setPhoneNumber($faker->phoneNumber)
             ->setPlainPassword($faker->password(8))
+            ->setTimeZone($faker->timezone)
         ;
 
         $this->em->persist($user);

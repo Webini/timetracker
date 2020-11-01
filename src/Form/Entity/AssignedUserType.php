@@ -52,8 +52,8 @@ class AssignedUserType extends AbstractType
                 'required' => true,
                 'constraints' => [
                     new NotBlank(),
-                    new GreaterThanOrEqual(AssignedUser::PERMISSION_READ_TASK),
-                    new LessThanOrEqual($admin ? AssignedUser::PERMISSIONS_ALL : AssignedUser::PERMISSIONS_TASK_CRUD)
+                    new GreaterThanOrEqual(AssignedUser::PERMISSION_NONE),
+                    new LessThanOrEqual($admin ? AssignedUser::PERMISSIONS_ALL : AssignedUser::PERMISSIONS_TASK_CUD)
                 ]
             ])
         ;
