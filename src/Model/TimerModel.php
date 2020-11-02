@@ -6,6 +6,7 @@ namespace App\Model;
 
 use App\Entity\Task;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 
 class TimerModel
@@ -19,12 +20,6 @@ class TimerModel
     /**
      * @var integer|null
      *
-     * @Assert\Expression(
-     *     "this.getStartedAt() !== '' &&
-               (this.getMinutes() === null || this.getMinutes() === 0 || this.getMinutes() === '') &&
-               (value === null || value === '' || value === 0)",
-     *     message="This field is missing."
-     * )
      * @Assert\GreaterThanOrEqual(0)
      * @Assert\LessThanOrEqual(23)
      */
@@ -32,12 +27,8 @@ class TimerModel
 
     /**
      * @var integer|null
-     * @Assert\Expression(
-     *     "this.getStartedAt() !== '' &&
-               (this.getHours() === null || this.getHours() === 0 || this.getHours() === '') &&
-               (value === null || value === '' || value === 0)",
-     *     message="This field is missing."
-     * )
+     *
+     * @Assert\Callback({ TimerModel::class, "validateTime" })
      * @Assert\GreaterThanOrEqual(0)
      * @Assert\LessThanOrEqual(59)
      */
@@ -165,5 +156,23 @@ class TimerModel
     {
         $this->force = $force;
         return $this;
+    }
+
+    /**
+     * @param string|null $value
+     * @param ExecutionContextInterface $context
+     */
+    public static function validateTime(?string $value, ExecutionContextInterface $context)
+    {
+        $object = $context->getObject();
+        if ($object->getStartedAt() === null) {
+            return;
+        }
+
+        if (!empty($object->getHours()) || !empty($object->getMinutes())) {
+            return;
+        }
+
+        $context->addViolation("You must set at least one hour or one minute");
     }
 }

@@ -22,8 +22,8 @@ api_users_search:
   defaults: { _controller: 'App\Controller\Api\User\UserController::search' }
   methods: [ 'GET' ]
 
-api_projects_timers:
-  resource: timers.yaml
-  prefix: /{user}/timers
+api_projects_timer:
+  resource: timer.yaml
+  prefix: /{user}/timer
   requirements:
     user: "[0-9]+"

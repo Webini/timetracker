@@ -29,11 +29,13 @@ class TaskTimer
     private $task;
 
     /**
+     * @var \DateTime|null
      * @ORM\Column(type="datetimetz", nullable=true)
      */
     private $startedAt;
 
     /**
+     * @var \DateTime|null
      * @ORM\Column(type="datetimetz", nullable=true)
      */
     private $stoppedAt;
@@ -67,24 +69,24 @@ class TaskTimer
         return $this;
     }
 
-    public function getStartedAt(): ?\DateTimeInterface
+    public function getStartedAt(): ?\DateTime
     {
         return $this->startedAt;
     }
 
-    public function setStartedAt(?\DateTimeInterface $startedAt): self
+    public function setStartedAt(?\DateTime $startedAt): self
     {
         $this->startedAt = $startedAt;
 
         return $this;
     }
 
-    public function getStoppedAt(): ?\DateTimeInterface
+    public function getStoppedAt(): ?\DateTime
     {
         return $this->stoppedAt;
     }
 
-    public function setStoppedAt(?\DateTimeInterface $stoppedAt): self
+    public function setStoppedAt(?\DateTime $stoppedAt): self
     {
         $this->stoppedAt = $stoppedAt;
 

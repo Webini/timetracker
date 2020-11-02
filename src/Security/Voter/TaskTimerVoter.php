@@ -17,9 +17,11 @@ class TaskTimerVoter extends Voter
     use AuthorizationCheckerAwareTrait;
 
     const TIMER_CREATE = 'TIMER_CREATE';
+    const TIMER_STOP = 'TIMER_STOP';
 
     const ALL_ATTRIBUTES = [
-        self::TIMER_CREATE
+        self::TIMER_CREATE,
+        self::TIMER_STOP,
     ];
 
     /**
@@ -64,8 +66,29 @@ class TaskTimerVoter extends Voter
         if ($attribute === self::TIMER_CREATE) {
             return $this->canCreate($user, $subject);
         }
+        if ($attribute === self::TIMER_STOP) {
+            return $this->canStop($user, $subject);
+        }
 
         return false;
+    }
+
+    /**
+     * @param User $user
+     * @param TaskTimer $taskTimer
+     * @return bool
+     */
+    public function canStop(User $user, TaskTimer $taskTimer): bool
+    {
+        if ($taskTimer->getStoppedAt() !== null) {
+            return false;
+        }
+
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        return $taskTimer->getOwner()->getId() === $user->getId();
     }
 
     /**
@@ -73,7 +96,7 @@ class TaskTimerVoter extends Voter
      * Project manager / user can create timer for projects where they are assigned
      * Project admin can create timer for users assigned to project where he's project admin
      * @param User $user
-     * @param Task $task
+     * @param TaskTimer $timer
      * @return bool
      */
     private function canCreate(User $user, TaskTimer $timer): bool
@@ -99,7 +122,9 @@ class TaskTimerVoter extends Voter
 
         $timerAssignedUser = $this->assignedUserManager->getAssignedUserFor($project, $owner);
         // we can't create a timer for an user not assigned to the project
-        if ($timerAssignedUser === null) {
+        // Or a user without project manager rights
+        if ($timerAssignedUser === null ||
+            !$this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER])) {
             return false;
         }
 

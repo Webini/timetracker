@@ -1,4 +1,0 @@
-api_users_timers_start:
-  path: /
-  defaults: { _controller: 'App\Controller\Api\User\TimerController::start' }
-  methods: [ 'PUT' ]

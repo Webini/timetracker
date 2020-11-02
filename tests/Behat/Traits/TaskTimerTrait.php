@@ -63,26 +63,44 @@ trait TaskTimerTrait
     }
 
     /**
-     * @Given /^i have a timer running for task (.+)$/
+     * @Given /^a running timer for task (.+) and user (.+)$/
      * @param string $taskPath
+     * @param string $userPath
      */
-    public function iHaveATimerRunning(string $taskPath): void
+    public function aRunningTimerForTaskAndUser(string $taskPath, string $userPath): void
     {
-        $me = $this->getMe();
-        if ($me === null) {
-            throw new \RuntimeException('Cannot found current user');
-        }
-
-        $task = $this->strictAccessor->getValue($this->bucket, $taskPath);
-        $this->createTimer($me, $task);
+        $this->aRunningTimerForTaskAndUserSavedIn($taskPath, $userPath);
     }
 
     /**
-     * @Given /^i have a timer running for task (.+) saved in (.+)$/
+     * @Given /^a running timer for task (.+) and user (.+) saved in (.+)$/
+     */
+    public function aRunningTimerForTaskAndUserSavedIn(string $taskPath, string $userPath, ?string $path = null): void
+    {
+        $task = $this->strictAccessor->getValue($this->bucket, $taskPath);
+        $user = $this->strictAccessor->getValue($this->bucket, $userPath);
+        $timer = $this->createTimer($user, $task);
+
+        if ($path !== null) {
+            $this->accessor->setValue($this->bucket, $path, $timer);
+        }
+    }
+
+    /**
+     * @Given /^i have a running timer for task (.+)$/
+     * @param string $taskPath
+     */
+    public function iHaveARunningTimer(string $taskPath): void
+    {
+        $this->iHaveARunningTimerSavedIn($taskPath);
+    }
+
+    /**
+     * @Given /^i have a running timer for task (.+) saved in (.+)$/
      * @param string $taskPath
      * @param string $path
      */
-    public function iHaveATimerRunningSavedIn(string $taskPath, string $path): void
+    public function iHaveARunningTimerSavedIn(string $taskPath, ?string $path = null): void
     {
         $me = $this->getMe();
         if ($me === null) {
@@ -91,7 +109,9 @@ trait TaskTimerTrait
 
         $task = $this->strictAccessor->getValue($this->bucket, $taskPath);
         $timer = $this->createTimer($me, $task);
-        $this->accessor->setValue($this->bucket, $path, $timer);
+        if ($path !== null) {
+            $this->accessor->setValue($this->bucket, $path, $timer);
+        }
     }
 
 }

@@ -22,13 +22,19 @@ class TaskTimerManager
      * @var EntityManagerInterface
      */
     private $em;
+    /**
+     * @var TimeZoneManager
+     */
+    private $timeZoneManager;
 
     /**
      * TaskTimerManager constructor.
      * @param EntityManagerInterface $em
+     * @param TimeZoneManager $timeZoneManager
      */
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, TimeZoneManager $timeZoneManager)
     {
+        $this->timeZoneManager = $timeZoneManager;
         $this->em = $em;
         $this->repo = $em->getRepository(TaskTimer::class);
     }
@@ -47,24 +53,27 @@ class TaskTimerManager
      * @param TaskTimer $timer
      * @return $this
      */
-    public function stopTimer(TaskTimer $timer): self
+    public function stop(TaskTimer $timer, ?User $currentUser): self
     {
-        $timer->setStoppedAt(new \DateTime());
+        $timer->setStoppedAt($this->timeZoneManager->createDate('now', $currentUser));
         return $this;
     }
 
     /**
      * @param User $user
      * @param TimerModel $timer
+     * @param User|null $createdBy
      * @return TaskTimer
+     * @throws \Exception
      */
-    public function createFor(User $user, TimerModel $timer): TaskTimer
+    public function createFor(User $user, TimerModel $timer, ?User $createdBy = null): TaskTimer
     {
         $taskTimer = new TaskTimer();
         $taskTimer
             ->setOwner($user)
             ->setNote($timer->getNote())
             ->setTask($timer->getTask())
+            ->setCreatedBy($createdBy)
         ;
 
         $startedAt = $timer->getStartedAt();
@@ -82,7 +91,9 @@ class TaskTimerManager
                 ->setStoppedAt($stoppedAt)
             ;
         } else {
-            $taskTimer->setStartedAt(new \DateTime());
+            $taskTimer->setStartedAt(
+                $this->timeZoneManager->createDate('now', $createdBy)
+            );
         }
 
         return $taskTimer;

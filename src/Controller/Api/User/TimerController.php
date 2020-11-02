@@ -52,13 +52,15 @@ class TimerController extends AbstractFOSRestController
 
         /** @var TimerModel $timer */
         $timer = $form->getData();
-        $taskTimer = $this->taskTimerManager->createFor($user, $timer);
+        $loggedUser = $this->getUser();
+        $manager = $this->taskTimerManager;
+        $taskTimer = $manager->createFor($user, $timer, $loggedUser);
         $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_CREATE, $taskTimer);
 
-        $runningTimer = $this->taskTimerManager->getRunningTimer($user);
+        $runningTimer = $manager->getRunningTimer($user);
         if ($runningTimer !== null) {
             if ($timer->getForce()) {
-                $this->taskTimerManager->stopTimer($runningTimer);
+                $manager->stop($runningTimer, $loggedUser);
             } else {
                 return $this->view(null, Response::HTTP_CONFLICT);
             }
@@ -68,6 +70,26 @@ class TimerController extends AbstractFOSRestController
         $this->em->flush();
 
         return $this->view($taskTimer);
+    }
+
+    /**
+     * @param User $user
+     * @return View
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function stop(User $user): View
+    {
+        $manager = $this->taskTimerManager;
+        $runningTimer = $manager->getRunningTimer($user);
+        if ($runningTimer === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_STOP, $runningTimer);
+
+        $manager->stop($runningTimer, $this->getUser());
+        $this->em->flush();
+        return $this->view(null, Response::HTTP_NO_CONTENT);
     }
 
 }
