@@ -16,7 +16,7 @@ Feature:
         When i set to [request][content][email] value "user@fixture.fr"
         And i set to [request][content][password] value "invalid"
         And i send a post on route api_auth_login
-        Then the response should not be successful 
+        Then the response should not be successful
 
     Scenario: User will try to refresh his token
         Given i am an user of type user
@@ -37,7 +37,8 @@ Feature:
           "firstName": "Anonymous",
           "lastName": "Edouard",
           "email": "Anonymous@edouard.com",
-          "plainPassword": "test1234"
+          "plainPassword": "test1234",
+          "timeZone": "Europe/Paris"
         }
         """
         And i send a put on route api_auth_register

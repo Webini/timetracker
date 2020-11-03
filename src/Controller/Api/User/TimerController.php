@@ -11,6 +11,7 @@ use App\Manager\TaskTimerManager;
 use App\Model\TimerModel;
 use App\Security\Voter\TaskTimerVoter;
 use App\Traits\EntityManagerAwareTrait;
+use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
 use Symfony\Component\HttpFoundation\Request;
@@ -92,4 +93,23 @@ class TimerController extends AbstractFOSRestController
         return $this->view(null, Response::HTTP_NO_CONTENT);
     }
 
+    /**
+     * @param User $user
+     * @return View
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getOne(User $user): View
+    {
+        $manager = $this->taskTimerManager;
+        $runningTimer = $manager->getRunningTimer($user);
+        if ($runningTimer === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_READ_RUNNING, $runningTimer);
+        return $this
+            ->view($runningTimer)
+            ->setContext((new Context())->setAttribute('withTask', true)
+        );
+    }
 }

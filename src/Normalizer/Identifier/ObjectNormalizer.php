@@ -145,6 +145,7 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
             if (isset($context[self::CALLBACKS][$name])) {
                 continue;
             }
+
             $context[self::CALLBACKS][$name] = [
                 $this,
                 $type === self::IS_ONE ? 'callbackIdentifier' : 'callbackIdentifiers'
@@ -163,7 +164,7 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
      * @param bool $flattenIfSingle flatten results if single id is found
      * @return array|bool|int|float|string|null
      */
-    private function callbackIdentifier($value, $object, string $attributeName, string $format, array $context = [], bool $flattenIfSingle = true)
+    public function callbackIdentifier($value, $object, string $attributeName, string $format, array $context = [], bool $flattenIfSingle = true)
     {
         if ($value === null || is_scalar($value)) {
             return $value;

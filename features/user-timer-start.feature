@@ -9,12 +9,6 @@ Feature: In order to create a timer for an user
   As an allowed user, i can automatically stop my running timer and start a new one if
   the endpoint is called with a force parameter.
 
-# sentence possibilities
-#  Given a running timer for task [task] saved in [path]
-#  Given a timer runned 3 days ago during 5 hours for task [task]
-#  Given i have a running timer for task [task] saved in [path]
-#  Given my runned timer 3 days ago during 5 hours for task [task]
-
   Background:
     Given a project saved in [project]
     Given an user of type user saved in [fakeUser]

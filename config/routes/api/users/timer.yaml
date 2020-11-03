@@ -7,3 +7,8 @@ api_users_timer_stop:
   path: /stop
   defaults: { _controller: 'App\Controller\Api\User\TimerController::stop' }
   methods: [ 'POST' ]
+
+api_users_timer_get:
+  path: /
+  defaults: { _controller: 'App\Controller\Api\User\TimerController::getOne' }
+  methods: [ 'GET' ]

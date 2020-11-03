@@ -18,10 +18,12 @@ class TaskTimerVoter extends Voter
 
     const TIMER_CREATE = 'TIMER_CREATE';
     const TIMER_STOP = 'TIMER_STOP';
+    const TIMER_READ_RUNNING = 'TIMER_READ_RUNNING';
 
     const ALL_ATTRIBUTES = [
         self::TIMER_CREATE,
         self::TIMER_STOP,
+        self::TIMER_READ_RUNNING,
     ];
 
     /**
@@ -69,6 +71,9 @@ class TaskTimerVoter extends Voter
         if ($attribute === self::TIMER_STOP) {
             return $this->canStop($user, $subject);
         }
+        if ($attribute === self::TIMER_READ_RUNNING) {
+            return $this->canReadRunning($user, $subject);
+        }
 
         return false;
     }
@@ -78,9 +83,30 @@ class TaskTimerVoter extends Voter
      * @param TaskTimer $taskTimer
      * @return bool
      */
+    public function canReadRunning(User $user, TaskTimer $taskTimer): bool
+    {
+        if ($taskTimer->isStopped()) {
+            return false;
+        }
+
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        return $taskTimer->getOwner()->getId() === $user->getId();
+    }
+
+    /**
+     * Super admin / admin can stop all timers
+     * PM / User can stop only theirs running timer
+     * Other can't do anything
+     * @param User $user
+     * @param TaskTimer $taskTimer
+     * @return bool
+     */
     public function canStop(User $user, TaskTimer $taskTimer): bool
     {
-        if ($taskTimer->getStoppedAt() !== null) {
+        if ($taskTimer->isStopped()) {
             return false;
         }
 

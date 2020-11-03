@@ -2,10 +2,12 @@
 
 namespace App\Entity;
 
+use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\TaskTimerRepository;
 use App\Traits\BlameableEntity;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=TaskTimerRepository::class)
@@ -19,6 +21,7 @@ class TaskTimer
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({ "task_timer_full" })
      */
     private $id;
 
@@ -30,12 +33,14 @@ class TaskTimer
 
     /**
      * @var \DateTime|null
+     * @Groups({ "task_timer_full" })
      * @ORM\Column(type="datetimetz", nullable=true)
      */
     private $startedAt;
 
     /**
      * @var \DateTime|null
+     * @Groups({ "task_timer_full" })
      * @ORM\Column(type="datetimetz", nullable=true)
      */
     private $stoppedAt;
@@ -47,6 +52,8 @@ class TaskTimer
 
     /**
      * @var User|null
+     * @Groups({ "task_timer_full" })
+     * @SerializeIdentifier()
      * @ORM\ManyToOne(targetEntity=User::class)
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL")
      */
@@ -79,6 +86,14 @@ class TaskTimer
         $this->startedAt = $startedAt;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStopped(): bool
+    {
+        return $this->stoppedAt !== null;
     }
 
     public function getStoppedAt(): ?\DateTime

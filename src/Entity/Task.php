@@ -24,7 +24,7 @@ class Task
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({ "task_full" })
+     * @Groups({ "task_full", "task_short" })
      */
     private $id;
 
@@ -43,13 +43,13 @@ class Task
     /**
      * @ORM\Column(type="string", length=1024)
      * @Assert\NotBlank()
-     * @Groups({ "task_full" })
+     * @Groups({ "task_full", "task_short" })
      */
     private $name;
 
     /**
      * @ORM\Column(type="text", nullable=true)
-     * @Groups({ "task_full" })
+     * @Groups({ "task_full", "task_short" })
      */
     private $description;
 
