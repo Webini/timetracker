@@ -19,7 +19,8 @@ class AuthenticationSuccessListener
         }
 
         $event->setData(array_merge($data, [
-            'roles' => $user->getOriginalRoles()
+            'roles' => $user->getRoles(),
+            'id' => $user->getId(),
         ]));
     }
 
