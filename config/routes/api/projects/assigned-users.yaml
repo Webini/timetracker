@@ -12,8 +12,12 @@ api_projects_users_delete:
   path: /{user}
   defaults: { _controller: 'App\Controller\Api\Project\AssignedUsersController::delete' }
   methods: [ 'DELETE' ]
+  requirements:
+    user: "[0-9]+"
 
 api_projects_users_update:
   path: /{user}
   defaults: { _controller: 'App\Controller\Api\Project\AssignedUsersController::update' }
   methods: [ 'PATCH' ]
+  requirements:
+    user: "[0-9]+"
