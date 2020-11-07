@@ -46,7 +46,7 @@ class ProjectController extends AbstractFOSRestController
         $this->submitRequestContent($form, $request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $project = $this->projectManager->create($form->getData());
+            $project = $this->projectManager->create($form->getData(), $this->getUser());
 
             $this->em->persist($project);
             $this->em->flush();
