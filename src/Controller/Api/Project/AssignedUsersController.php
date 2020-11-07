@@ -13,6 +13,7 @@ use App\Security\Voter\AssignedUserVoter;
 use App\Traits\EntityManagerAwareTrait;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
+use PhpParser\Node\Expr\Assign;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,7 +95,7 @@ class AssignedUsersController extends AbstractFOSRestController
      */
     public function getAll(Project $project): View
     {
-        $this->denyAccessUnlessGranted(AssignedUserVoter::ASSIGNED_USER_READ, $project);
+        $this->denyAccessUnlessGranted(AssignedUserVoter::ASSIGNED_USER_READ_ALL, $project);
         $repo = $this->em->getRepository(AssignedUser::class);
         return $this->view($repo->findAllForProject($project));
     }
@@ -112,5 +113,17 @@ class AssignedUsersController extends AbstractFOSRestController
         $this->em->remove($assignedUser);
         $this->em->flush();
         return $this->view(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @Entity("assignedUser", expr="repository.findForProjectAndUser(project, user)")
+     * @param Project $project
+     * @param AssignedUser $assignedUser
+     * @return View
+     */
+    public function getOne(Project $project, AssignedUser $assignedUser): View
+    {
+        $this->denyAccessUnlessGranted(AssignedUserVoter::ASSIGNED_USER_READ, $assignedUser);
+        return $this->view($assignedUser);
     }
 }

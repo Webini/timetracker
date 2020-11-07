@@ -19,15 +19,16 @@ Feature:
     When i send a get on route api_projects_tasks_get_one
     Then the status code should be <expectedStatus>
     Examples:
-        | role            | assignedUser | assignedPerm | expectedStatus |
-        | super admin     | [fakeUser]   | admin        | 200            |
-        | super admin     | [me]         | cud         | 200            |
-        | admin           | [fakeUser]   | admin        | 200            |
-        | admin           | [me]         | cud         | 200            |
-        | project manager | [fakeUser]   | admin        | 403            |
-        | project manager | [me]         | admin        | 200            |
-        | user            | [fakeUser]   | admin        | 403            |
-        | user            | [me]         | cud         | 200            |
+         | role            | assignedUser | assignedPerm | expectedStatus |
+         | super admin     | [fakeUser]   | none         | 200            |
+         | super admin     | [me]         | cud          | 200            |
+         | admin           | [fakeUser]   | none         | 200            |
+         | admin           | [me]         | cud          | 200            |
+         | project manager | [fakeUser]   | none         | 403            |
+         | project manager | [me]         | none         | 200            |
+         | user            | [fakeUser]   | none         | 403            |
+         | user            | [me]         | cud          | 200            |
+
 
   Scenario: As anon i can't do anything
     When i send a get on route api_projects_tasks_get_one

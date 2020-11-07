@@ -2,7 +2,6 @@ Feature:
   In order to create a new assigned users to project
   As an administrator / super admin i could assign any users to any projects with any permission
   As a project manager i can only assign users to projects where i'm admin
-  As a project manager i can't assign users with admin permission
   As an user i can't assign anybody to any projects
   As an anonymous i can't do anything
 
@@ -14,7 +13,7 @@ Feature:
 
   Scenario Outline: As an admin / super admin i could assign any users to any projects with any permission
     Given i am an user of type <userType>
-    Given i set to [request][content][permissions] value 263
+    Given i set to [request][content][permissions] value 7
     When i send a put on route api_projects_users_create
     Then the status code should be 201
     Examples:
@@ -22,7 +21,7 @@ Feature:
       | super admin |
       | admin       |
 
-  Scenario: As a project manager i can only assign users to projects where i'm admin
+  Scenario: As a project manager i can only assign users to projects where i'm assigned
     Given i am an user of type project manager
     Given i create a project named "Test PM" saved in [project]
     Given i set to [request][content][permissions] value 7
@@ -30,20 +29,12 @@ Feature:
     When i send a put on route api_projects_users_create
     Then the status code should be 201
 
-  Scenario: As a project manager i can't assign users to projects where i'm not admin
+  Scenario: As a project manager i can't assign users to projects where i'm not assigned
     Given i am an user of type project manager
     Given i set to [request][content][permissions] value 7
     Given i set to [route][params][project] the value of [project].id
     When i send a put on route api_projects_users_create
     Then the status code should be 403
-
-  Scenario: As a project manager i can't assign users with admin permission
-    Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission admin
-    Given i set to [request][content][permissions] value 263
-    Given i set to [route][params][project] the value of [project].id
-    When i send a put on route api_projects_users_create
-    Then the status code should be 400
 
   Scenario: As an user i can't assign anybody to any projects
     Given i am an user of type user

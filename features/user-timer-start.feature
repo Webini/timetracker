@@ -45,11 +45,10 @@ Feature: In order to create a timer for an user
     When i send a put on route api_users_timer_start
     Then the status code should be <expectedStatus>
     Examples:
-       | role            | permission | expectedStatus |
-       | project manager | admin      | 200            |
-       | project manager | none       | 403            |
-       | user            | admin      | 403            |
-       | user            | none       | 403            |
+        | role            | permission | expectedStatus |
+        | project manager | none       | 200            |
+        | user            | cud        | 403            |
+        | user            | none       | 403            |
 
   Scenario: As an anon i can't do anything.
     When i send a put on route api_users_timer_start

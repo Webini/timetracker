@@ -112,9 +112,9 @@ class ProjectVoter extends Voter
             return true;
         }
 
-        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
-        if ($assignedUser !== null) {
-            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER])) {
+            $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
+            return !!$assignedUser;
         }
 
         return false;
@@ -122,7 +122,7 @@ class ProjectVoter extends Voter
 
     /**
      * Admin and super admin can update a project
-     * Project managers can update the project only if they are project admin
+     * Project managers can update the project only if they are assigned
      * @param User $user
      * @param Project $project
      * @return bool
@@ -133,9 +133,9 @@ class ProjectVoter extends Voter
             return true;
         }
 
-        $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
-        if ($assignedUser !== null) {
-            return $assignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER])) {
+            $assignedUser = $this->assignedUserManager->getAssignedUserFor($project, $user);
+            return !!$assignedUser;
         }
 
         return false;

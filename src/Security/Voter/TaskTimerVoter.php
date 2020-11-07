@@ -149,12 +149,11 @@ class TaskTimerVoter extends Voter
         $timerAssignedUser = $this->assignedUserManager->getAssignedUserFor($project, $owner);
         // we can't create a timer for an user not assigned to the project
         // Or a user without project manager rights
-        if ($timerAssignedUser === null ||
-            !$this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER])) {
+        if ($timerAssignedUser === null) {
             return false;
         }
 
-        // we can create timer for other only if we are project admin
-        return $currentAssignedUser->hasPermissions(AssignedUser::PERMISSION_PROJECT_ADMIN);
+        // we can create timer for other only if we are project project manager
+        return $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_PROJECT_MANAGER]);
     }
 }

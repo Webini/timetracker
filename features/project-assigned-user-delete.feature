@@ -1,7 +1,7 @@
 Feature:
   In order to remove an user from a project
   As an admin / super admin i can delete anyone
-  As a project manager i can only delete users from project where i'm admin
+  As a project manager i can only delete users from project where i'm assigned
   As an user i can't delete users from any project
   As an anonymous i can't do anything
 
@@ -22,18 +22,19 @@ Feature:
       | admin       |
 
   Scenario Outline:
-    As a project manager i can only delete users from project where i'm admin
-    As a project manager i can't delete users from project where i'm not admin
+    As a project manager i can only delete users from project where i'm assigned
+    As a project manager i can't delete users from project where i'm not assigned
     As an user i can't delete users from any project
     Given i am an user of type <userType>
+    Given an user of type user saved in [users][faked]
     Given an user <assigned> assigned to project [project] with permission <permission>
     When i send a delete on route api_projects_users_delete
     Then the status code should be <expectedStatus>
     Examples:
-     | userType        | assigned | permission | expectedStatus |
-     | project manager | [me]     | admin      | 204            |
-     | user            | [me]     | cud       | 403            |
-     | project manager | [me]     | cud       | 403            |
+      | userType        | assigned       | permission | expectedStatus |
+      | project manager | [me]           | cud        | 204            |
+      | user            | [me]           | cud        | 403            |
+      | project manager | [users][faked] | cud        | 403            |
 
   Scenario: As an anonymous i can't do anything
     When i send a delete on route api_projects_users_delete

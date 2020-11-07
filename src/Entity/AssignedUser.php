@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\AssignedUserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
@@ -18,10 +19,9 @@ class AssignedUser
     const PERMISSION_CREATE_TASK = 1;
     const PERMISSION_DELETE_TASK = 2;
     const PERMISSION_UPDATE_TASK = 4;
-    const PERMISSION_PROJECT_ADMIN = 256;
 
     const PERMISSIONS_TASK_CUD = self::PERMISSION_CREATE_TASK | self::PERMISSION_DELETE_TASK | self::PERMISSION_UPDATE_TASK;
-    const PERMISSIONS_ALL = self::PERMISSIONS_TASK_CUD | self::PERMISSION_PROJECT_ADMIN;
+    const PERMISSIONS_ALL = self::PERMISSIONS_TASK_CUD;
 
     /**
      * @ORM\Id

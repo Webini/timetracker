@@ -20,15 +20,16 @@ Feature:
     When i send a get on route api_projects_tasks_search
     Then the status code should be <expectedStatus>
     Examples:
-        | role            | assigned | assignedPerm | expectedStatus |
-        | super admin     | [fake]   | admin        | 200            |
-        | super admin     | [me]     | cud          | 200            |
-        | admin           | [fake]   | admin        | 200            |
-        | admin           | [me]     | cud          | 200            |
-        | project manager | [fake]   | admin        | 403            |
-        | project manager | [me]     | admin        | 200            |
-        | user            | [fake]   | admin        | 403            |
-        | user            | [me]     | cud          | 200            |
+         | role            | assigned | assignedPerm | expectedStatus |
+         | super admin     | [fake]   | none         | 200            |
+         | super admin     | [me]     | cud          | 200            |
+         | admin           | [fake]   | none         | 200            |
+         | admin           | [me]     | cud          | 200            |
+         | project manager | [fake]   | none         | 403            |
+         | project manager | [me]     | none         | 200            |
+         | user            | [fake]   | none         | 403            |
+         | user            | [me]     | cud          | 200            |
+
 
 
   Scenario: As any allowed user i should be able to search in tasks
@@ -37,7 +38,7 @@ Feature:
     When i send a get on route api_projects_tasks_search
     Then the status code should be 200
     And the response item [pagination][totalCount] should be equal to 1
-    
+
   Scenario: As any allowed user i should be able to search in tasks
     Given i am an user of type super admin
     When i send a get on route api_projects_tasks_search

@@ -1,8 +1,8 @@
 Feature:
   In order to modify an existing project,
   As a Super admin / admin i want to edit any projects
-  As a Project Manager i want to edit only projects where i'm assigned as project admin
-  As a Project Manager i can't edit projects where i'm not assigned as project admin
+  As a Project Manager i want to edit only projects where i'm assigned
+  As a Project Manager i can't edit projects where i'm not assigned
   As an user i can't edit any projects
   As an anonymous i can't edit anything
 
@@ -22,16 +22,16 @@ Feature:
       | super admin |
       | admin       |
 
-  Scenario: As a Project Manager i want to edit only projects where i'm assigned as project admin
+  Scenario: As a Project Manager i want to edit only projects where i'm assigned
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission admin
+    Given an user [me] assigned to project [project] with permission cud
     Given i set to [request][content][name] value "New project pm"
     When i send a patch on route api_projects_update
     Then the status code should be 200
     And the response item [id] should not be empty
     And the response item [name] should be equal to "New project pm"
 
-  Scenario: As a Project Manager i can't edit projects where i'm not assigned as project admin
+  Scenario: As a Project Manager i can't edit projects where i'm not assigned
     Given i am an user of type project manager
     Given i set to [request][content][name] value "New project pm"
     When i send a patch on route api_projects_update

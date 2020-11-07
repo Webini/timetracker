@@ -1,7 +1,7 @@
 Feature:
   In order to edit an assigned user
   As an admin / super admin i can edit everybody
-  As a project manager i can edit users from projects where i'm admin
+  As a project manager i can edit users from projects where i'm assigned
   As an user i can't edit anyone
   As an anonymous i can't do anything
 
@@ -24,17 +24,16 @@ Feature:
       | super admin |
       | admin       |
 
-  Scenario: As a project manager i can edit users from projects where i'm admin
+  Scenario: As a project manager i can edit users from projects where i'm assigned
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission admin
+    Given an user [me] assigned to project [project] with permission none
     When i send a patch on route api_projects_users_update
     Then the status code should be 200
     And the response item [permissions] should be equal to 1
     And the response item [assigned] should not be empty
 
-  Scenario: As a project manager i can't edit users from projects where i'm not admin
+  Scenario: As a project manager i can't edit users from projects where i'm not assigned
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission cud
     When i send a patch on route api_projects_users_update
     Then the status code should be 403
 

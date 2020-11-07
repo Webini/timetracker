@@ -1,7 +1,7 @@
 Feature:
   In order to get all project's users
   As an admin / super admin i can retrieve all project's users
-  As a project manager i can retrieve all project's users if i'm admin on this project
+  As a project manager i can retrieve all project's users if i'm assigned to this project
   As an user i can't retrieve project's users
   As an anonymous i can't do anything
   Each assigned users in response should contain user's information, permission, and
@@ -23,14 +23,14 @@ Feature:
       | super admin |
       | admin       |
 
-  Scenario: As a project manager i can retrieve all project's users if i'm admin on this project
+  Scenario: As a project manager i can retrieve all project's users if i'm assigned to this project
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission admin
+    Given an user [me] assigned to project [project] with permission none
     When i send a get on route api_projects_users_get_all
     Then the status code should be 200
     Then the response should count 3
 
-  Scenario: As a project manager i can't retrieve all project's users if i'm not admin on this project
+  Scenario: As a project manager i can't retrieve all project's users if i'm not assigned to this project
     Given i am an user of type project manager
     When i send a get on route api_projects_users_get_all
     Then the status code should be 403
@@ -51,12 +51,15 @@ Feature:
     Each assigned users in response should contain user's information,
     permission, and it should not contains project's information
     Given i am an user of type project manager
-    Given an user [me] assigned to project [project] with permission admin
+    Given an user [me] assigned to project [project] with permission none
     When i send a get on route api_projects_users_get_all
     Then the status code should be 200
     Then the response item [0][assigned][firstName] should not be empty
     Then the response item [1][assigned][firstName] should not be empty
+    Then the response item [0][assigned][id] should not be empty
+    Then the response item [1][assigned][id] should not be empty
     Then the response item [0][permissions] should not be empty
     Then the response item [1][permissions] should not be empty
     Then the response item [0][project] should not be present
+    Then the response item [1][project] should not be present
     Then the response item [1][project] should not be present

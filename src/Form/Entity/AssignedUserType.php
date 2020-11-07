@@ -24,7 +24,6 @@ use Symfony\Component\Validator\Constraints\NotNull;
 
 class AssignedUserType extends AbstractType
 {
-    use AuthorizationCheckerAwareTrait;
     use EntityManagerAwareTrait;
 
     /**
@@ -33,8 +32,6 @@ class AssignedUserType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $admin = $this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN]);
-
         if ($options['creation']) {
             $userTransformer = new EntityToIdTransformer($this->em, User::class);
             $builder->add(
@@ -53,7 +50,7 @@ class AssignedUserType extends AbstractType
                 'constraints' => [
                     new NotBlank(),
                     new GreaterThanOrEqual(AssignedUser::PERMISSION_NONE),
-                    new LessThanOrEqual($admin ? AssignedUser::PERMISSIONS_ALL : AssignedUser::PERMISSIONS_TASK_CUD)
+                    new LessThanOrEqual(AssignedUser::PERMISSIONS_ALL)
                 ]
             ])
         ;
