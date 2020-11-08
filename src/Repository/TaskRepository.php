@@ -4,9 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Entity\TaskTimer;
 use App\Model\TaskSearch;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
@@ -63,6 +63,7 @@ class TaskRepository extends ServiceEntityRepository
     {
         $qb = $this
             ->createQueryBuilder('t')
+            ->select('t as entity')
             ->where('t.project = :project')
             ->setParameter('project', $project)
         ;
@@ -75,6 +76,23 @@ class TaskRepository extends ServiceEntityRepository
             ;
         }
 
+        // order by last timers / or task modification
+//        $query = $this->_em
+//            ->getRepository(TaskTimer::class)
+//            ->createQueryBuilder('tt')
+//            ->select('GREATEST(t.updatedAt, t.createdAt, MAX(
+//                GREATEST(
+//                    tt.startedAt,
+//                    tt.updatedAt,
+//                    COALESCE(tt.stoppedAt, CURRENT_TIMESTAMP())
+//                )
+//            ))')
+//            ->where('tt.task = t')
+//            ->setMaxResults(1)
+//        ;
+//        $qb->addSelect('(' . $query . ') as maxDate');
+//        $qb->addOrderBy('maxDate', 'DESC');
+
         return $qb;
     }
 
@@ -85,10 +103,20 @@ class TaskRepository extends ServiceEntityRepository
      */
     public function searchPaginated(Project $project, TaskSearch $search)
     {
-        return $this->paginator->paginate(
+        $paginated = $this->paginator->paginate(
             $this->searchTasksQuery($project, $search),
             $search->getPage(),
             $search->getLimit()
         );
+
+        $items = $paginated->getItems();
+        $newItems = [];
+        foreach ($items as $key => $item) {
+            $newItems[$key] = $item['entity'];
+        }
+
+        $paginated->setItems($newItems);
+
+        return $paginated;
     }
 }

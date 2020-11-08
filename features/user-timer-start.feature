@@ -1,7 +1,7 @@
 Feature: In order to create a timer for an user
   As an super admin / admin i can create a timer for all users.
   As a project manager / user i can create a timer for projects where i'm assigned.
-  As a project manager i can create timer for users assigned to projects where i'm admin.
+  As a project manager i can create timer for users assigned to projects where  i'm assigned too.
   As an anon i can't do anything.
   //voir a bouger la feature ci dessous dans le segment /timers
   As an allowed user, i can add a stopped timer with a start date and a duration.
@@ -39,7 +39,7 @@ Feature: In order to create a timer for an user
        | project manager | 200            |
        | user            | 200            |
 
-  Scenario Outline: As a project manager i can create timer for users assigned to projects where i'm admin.
+  Scenario Outline: As a project manager i can create timer for users assigned to projects where i'm assigned too
     Given i am an user of type <role>
     Given an user [me] assigned to project [project] with permission <permission>
     When i send a put on route api_users_timer_start

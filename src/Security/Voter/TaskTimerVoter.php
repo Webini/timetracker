@@ -120,7 +120,7 @@ class TaskTimerVoter extends Voter
     /**
      * Admin / SA can create timer for everyone / everything
      * Project manager / user can create timer for projects where they are assigned
-     * Project admin can create timer for users assigned to project where he's project admin
+     * Project admin can create timer for users assigned to project where he's assigned too
      * @param User $user
      * @param TaskTimer $timer
      * @return bool

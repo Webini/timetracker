@@ -20,3 +20,13 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+        dql:
+            datetime_functions:
+                at_time_zone: DoctrineExtensions\Query\Postgresql\AtTimeZoneFunction
+                extract: DoctrineExtensions\Query\Postgresql\ExtractFunction
+                greatest: DoctrineExtensions\Query\Postgresql\Greatest
+            numeric_functions:
+                least: DoctrineExtensions\Query\Postgresql\Least
+                greatest: DoctrineExtensions\Query\Postgresql\Greatest
+            string_functions:
+                greatest: DoctrineExtensions\Query\Postgresql\Greatest

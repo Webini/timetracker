@@ -53,27 +53,25 @@ class TaskTimerManager
      * @param TaskTimer $timer
      * @return $this
      */
-    public function stop(TaskTimer $timer, ?User $currentUser): self
+    public function stop(TaskTimer $timer): self
     {
-        $timer->setStoppedAt($this->timeZoneManager->createDate('now', $currentUser));
+        $timer->setStoppedAt(new \DateTime());
         return $this;
     }
 
     /**
      * @param User $user
      * @param TimerModel $timer
-     * @param User|null $createdBy
      * @return TaskTimer
      * @throws \Exception
      */
-    public function createFor(User $user, TimerModel $timer, ?User $createdBy = null): TaskTimer
+    public function createFor(User $user, TimerModel $timer): TaskTimer
     {
         $taskTimer = new TaskTimer();
         $taskTimer
             ->setOwner($user)
             ->setNote($timer->getNote())
             ->setTask($timer->getTask())
-            ->setCreatedBy($createdBy)
         ;
 
         $startedAt = $timer->getStartedAt();
@@ -91,9 +89,7 @@ class TaskTimerManager
                 ->setStoppedAt($stoppedAt)
             ;
         } else {
-            $taskTimer->setStartedAt(
-                $this->timeZoneManager->createDate('now', $createdBy)
-            );
+            $taskTimer->setStartedAt(new \DateTime());
         }
 
         return $taskTimer;

@@ -53,15 +53,14 @@ class TimerController extends AbstractFOSRestController
 
         /** @var TimerModel $timer */
         $timer = $form->getData();
-        $loggedUser = $this->getUser();
         $manager = $this->taskTimerManager;
-        $taskTimer = $manager->createFor($user, $timer, $loggedUser);
+        $taskTimer = $manager->createFor($user, $timer);
         $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_CREATE, $taskTimer);
 
         $runningTimer = $manager->getRunningTimer($user);
         if ($runningTimer !== null) {
             if ($timer->getForce()) {
-                $manager->stop($runningTimer, $loggedUser);
+                $manager->stop($runningTimer);
             } else {
                 return $this->view(null, Response::HTTP_CONFLICT);
             }
@@ -88,7 +87,7 @@ class TimerController extends AbstractFOSRestController
 
         $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_STOP, $runningTimer);
 
-        $manager->stop($runningTimer, $this->getUser());
+        $manager->stop($runningTimer);
         $this->em->flush();
         return $this->view(null, Response::HTTP_NO_CONTENT);
     }

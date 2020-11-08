@@ -59,6 +59,17 @@ class TaskTimer
      */
     private $owner;
 
+    /**
+     * @Groups({ "task_timer_full" })
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $system = false;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $duration;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -135,6 +146,30 @@ class TaskTimer
     public function setOwner(?User $owner): self
     {
         $this->owner = $owner;
+        return $this;
+    }
+
+    public function getSystem(): ?bool
+    {
+        return $this->system;
+    }
+
+    public function setSystem(bool $system): self
+    {
+        $this->system = $system;
+
+        return $this;
+    }
+
+    public function getDuration(): ?int
+    {
+        return $this->duration;
+    }
+
+    public function setDuration(?int $duration): self
+    {
+        $this->duration = $duration;
+
         return $this;
     }
 }
