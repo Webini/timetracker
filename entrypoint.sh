@@ -51,6 +51,8 @@ elif [[ "$1" == "behat" ]]; then
     gosu web ./vendor/bin/behat ${ARGUMENTS[@]} --strict < /dev/null
   fi
   exit
+elif [[ "$1" == "phpunit" ]]; then
+  exec "gosu" web ./vendor/bin/phpunit ${@:2}
 fi
 
 exec "$@"

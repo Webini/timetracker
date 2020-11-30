@@ -169,7 +169,7 @@ trait TaskTimerTrait
             $createdBy = $this->strictAccessor->getValue($this->bucket, $createdByPath);
         }
 
-        $startedAt = $this->timeZoneManager->createDate($strStartedAt, $createdBy);
+        $startedAt = $this->timeZoneManager->createLocalizedDate($strStartedAt, $createdBy);
         $timer = $this->createTimer($owner, $task, $startedAt, $hours, $minutes);
         if ($savedPath !== null) {
             $this->accessor->setValue($this->bucket, $savedPath, $timer);

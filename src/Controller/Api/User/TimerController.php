@@ -108,7 +108,7 @@ class TimerController extends AbstractFOSRestController
         $this->denyAccessUnlessGranted(TaskTimerVoter::TIMER_READ_RUNNING, $runningTimer);
         return $this
             ->view($runningTimer)
-            ->setContext((new Context())->setAttribute('withTask', true)
-        );
+            ->setContext((new Context())->setAttribute('withTask', true))
+        ;
     }
 }
