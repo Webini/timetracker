@@ -3,7 +3,7 @@ Feature:
   As an admin / super admin i can retrieve all tasks
   As a project manager / user i can retrieve only tasks from projects i'm assigned
   As anon i can't do anything
-  As an admin / super admin / project manager i want to retrieve total time spend by issue and by users
+  As an admin / super admin / project manager i want to retrieve total time spend by task and by users
   As an user i want to retrieve my total time spend
 
   Background:
@@ -36,11 +36,12 @@ Feature:
     When i send a get on route api_projects_tasks_get_one
     Then the status code should be 401
 
-  @current
-  Scenario: As an admin / super admin / project manager i want to retrieve total time spend by issue and by users
+  @todo
+  Scenario: As an admin / super admin / project manager i want to retrieve total time spend by task and by users
     Given i am an user of type project manager
     Given an user [me] assigned to project [project] with permission cud
     Given a timer started at 2020-10-18 21:00:00 during 4h 0m for task [task] and user [me]
     Given a timer started at 2020-10-17 00:00:00 during 24h 0m for task [task] and user [me]
     When i send a get on route api_projects_tasks_get_one
     Then the status code should be 200
+

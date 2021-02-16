@@ -19,10 +19,12 @@ class TaskVoter extends Voter
     const TASK_CREATE = 'TASK_CREATE';
     const TASK_UPDATE = 'TASK_UPDATE';
     const TASK_READ = 'TASK_READ';
+    const TASK_DELETE = 'TASK_DELETE';
 
     const TASK_ATTRIBUTES = [
         self::TASK_UPDATE,
         self::TASK_READ,
+        self::TASK_DELETE,
     ];
     /**
      * @var AssignedUserManager
@@ -75,6 +77,9 @@ class TaskVoter extends Voter
         }
         if ($attribute === self::TASK_READ) {
             return $this->canRead($user, $subject);
+        }
+        if ($attribute === self::TASK_DELETE) {
+            return $this->canDelete($user, $subject);
         }
 
         return false;
@@ -133,7 +138,7 @@ class TaskVoter extends Voter
 
     /**
      * admin / super admin can read all tasks
-     * PM / users can read only tasks where they are assigned
+     * PM / users can read only tasks when they are assigned to project
      * Anon can read nothing
      * @param User $user
      * @param Task $task
@@ -146,5 +151,31 @@ class TaskVoter extends Voter
         }
 
         return !!$this->assignedUserManager->getAssignedUserFor($task->getProject(), $user);
+    }
+
+    /**
+     * admin / super admin can delete all tasks
+     * PM / users can delete tasks when they have permission
+     * Anon can't do nothing
+     * @param User $user
+     * @param Task $task
+     * @return bool
+     */
+    private function canDelete(User $user, Task $task): bool
+    {
+        if ($this->authorizationChecker->isGranted(User::ROLES[User::ROLE_ADMIN])) {
+            return true;
+        }
+
+        $assignedUser = $this->assignedUserManager->getAssignedUserFor($task->getProject(), $user);
+        if ($assignedUser === null) {
+            return false;
+        }
+
+        if ($assignedUser->hasPermissions(AssignedUser::PERMISSION_DELETE_TASK)) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -34,3 +34,18 @@ Contient la configuration d'un task provider, peut être lié a plusieurs projet
 Task
 ====
 Une tâche est liée au projet, elle peut être archivée
+
+
+
+
+
+Privileges
+
+Label | SA | Admin | PM | User | Anon 
+------|---|---|---|---|---
+Project - Read | all | all | if assigned | if assigned | no
+Project - Update | all | all | if assigned | no | no
+Task - Read | all | all | assigned | assigned | no
+Task - Update | all | all | if assigned to project and has permission or own the task | if assigned to project and has permission or own the task | no
+Task - Delete | all | all | if assigned to project and has permission | no | no
+

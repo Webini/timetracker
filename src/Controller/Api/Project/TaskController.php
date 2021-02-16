@@ -18,6 +18,7 @@ use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends AbstractFOSRestController
 {
@@ -121,5 +122,20 @@ class TaskController extends AbstractFOSRestController
         }
 
         return $this->view($form);
+    }
+
+    /**
+     * @Entity("task", expr="repository.findOneForProject(project, task)")
+     * @param Task $task
+     * @return View
+     */
+    public function delete(Task $task): View
+    {
+        $this->denyAccessUnlessGranted(TaskVoter::TASK_DELETE, $task);
+
+        $this->taskManager->delete($task);
+        $this->em->remove($task);
+        $this->em->flush();
+        return $this->view(null, Response::HTTP_NO_CONTENT);
     }
 }

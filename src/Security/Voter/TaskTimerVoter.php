@@ -148,7 +148,6 @@ class TaskTimerVoter extends Voter
 
         $timerAssignedUser = $this->assignedUserManager->getAssignedUserFor($project, $owner);
         // we can't create a timer for an user not assigned to the project
-        // Or a user without project manager rights
         if ($timerAssignedUser === null) {
             return false;
         }

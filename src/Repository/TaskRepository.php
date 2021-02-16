@@ -77,21 +77,21 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         // order by last timers / or task modification
-//        $query = $this->_em
-//            ->getRepository(TaskTimer::class)
-//            ->createQueryBuilder('tt')
-//            ->select('GREATEST(t.updatedAt, t.createdAt, MAX(
-//                GREATEST(
-//                    tt.startedAt,
-//                    tt.updatedAt,
-//                    COALESCE(tt.stoppedAt, CURRENT_TIMESTAMP())
-//                )
-//            ))')
-//            ->where('tt.task = t')
-//            ->setMaxResults(1)
-//        ;
-//        $qb->addSelect('(' . $query . ') as maxDate');
-//        $qb->addOrderBy('maxDate', 'DESC');
+        $query = $this->_em
+            ->getRepository(TaskTimer::class)
+            ->createQueryBuilder('tt')
+            ->select('GREATEST(t.updatedAt, t.createdAt, MAX(
+                GREATEST(
+                    tt.startedAt,
+                    tt.updatedAt,
+                    COALESCE(tt.stoppedAt, CURRENT_TIMESTAMP())
+                )
+            ))')
+            ->where('tt.task = t')
+            ->setMaxResults(1)
+        ;
+        $qb->addSelect('(' . $query . ') as maxDate');
+        $qb->addOrderBy('maxDate', 'DESC');
 
         return $qb;
     }

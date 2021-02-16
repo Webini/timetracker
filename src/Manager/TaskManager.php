@@ -21,4 +21,13 @@ class TaskManager
         return $task;
     }
 
+    /**
+     * @param Task $task
+     * @return Task
+     */
+    public function delete(Task $task): Task
+    {
+        return $task;
+    }
+
 }

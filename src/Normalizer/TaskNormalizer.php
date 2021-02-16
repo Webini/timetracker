@@ -30,7 +30,13 @@ class TaskNormalizer implements NormalizerInterface
             $context['groups'] = [ 'task_full' ];
         }
 
-        return $this->normalizer->normalize($object, $format, $context);
+        $data = $this->normalizer->normalize($object, $format, $context);
+
+        if ($object->getCreatedBy()) {
+            $data['createdBy'] = [ 'id' => $object->getCreatedBy()->getId() ];
+        }
+
+        return $data;
     }
 
     /**

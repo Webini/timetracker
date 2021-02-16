@@ -17,6 +17,13 @@ api_projects_tasks_get_one:
   requirements:
     task: "[0-9]+"
 
+api_projects_tasks_delete:
+  path: /{task}
+  defaults: { _controller: 'App\Controller\Api\Project\TaskController::delete' }
+  methods: [ 'DELETE' ]
+  requirements:
+    task: "[0-9]+"
+
 api_projects_tasks_search:
   path: /
   defaults: { _controller: 'App\Controller\Api\Project\TaskController::search' }
