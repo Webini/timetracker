@@ -1,0 +1,642 @@
+openapi: 3.0.0
+info:
+  title: TimeTracker api
+  version: 0.0.0
+servers:
+  - url: http://127.0.0.1
+    description: Development
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log user
+      operationId: auth.login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  description: User email
+                  example: john@doe.org
+                password:
+                  description: User password
+                  type: string
+                  format: password
+                  example: mysecretpassword
+      responses:
+        '200':
+          description: User logged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenData'
+        '400':
+          description: 'Bad request, Missing fields'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfcError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+
+  /api/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh the JWT
+      operationId: auth.refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - refreshToken
+              properties:
+                token:
+                  type: string
+                  description: 'New JWT'
+                refreshToken:
+                  type: string
+                  description: 'New refresh token'
+      responses:
+        '200':
+          description: New token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenData'
+        '400':
+          description: 'Bad request, Missing fields'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfcError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+
+  /api/auth/register:
+    put:
+      tags:
+        - Authentication
+      summary: Create an account
+      operationId: auth.register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '200':
+          description: New token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenData'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+
+  /api/timezones:
+    get:
+      tags:
+        - Timezone
+      summary: Get all available timezones
+      operationId: timezones
+      responses:
+        '200':
+          description: Timezone list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: 'Timezones'
+                  type: string
+                example:
+                  - Africa/Cairo
+                  - America/Bahia
+                  - Asia/Baku
+                  - Europe/Paris
+
+  /api/projects/:
+    get:
+      tags:
+        - Projects
+      summary: Search my projects
+      operationId: projects.search
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            $ref: '#/components/schemas/SearchPage'
+        - name: limit
+          in: query
+          schema:
+            $ref: '#/components/schemas/SearchLimit'
+        - name: search
+          in: query
+          description: 'Keywords'
+          schema:
+            $ref: '#/components/schemas/SearchKeywords'
+      responses:
+        '200':
+          description: Project list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+    put:
+      tags:
+        - Projects
+      summary: Create a new projects
+      operationId: projects.create
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+
+  /api/projects/{projectId}:
+    get:
+      tags:
+        - Projects
+      summary: Retrieve one project
+      operationId: projects.get
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfcError'
+    patch:
+      tags:
+        - Projects
+      summary: Update one project
+      operationId: projects.edit
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfcError'
+
+
+  /api/projects/{projectId}/tasks/:
+    get:
+      tags:
+        - Project Tasks
+      summary: Search a in project's tasks
+      operationId: projects.tasks.search
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          schema:
+            $ref: '#/components/schemas/SearchPage'
+        - name: limit
+          in: query
+          schema:
+            $ref: '#/components/schemas/SearchLimit'
+        - name: search
+          in: query
+          description: 'Keywords'
+          schema:
+            $ref: '#/components/schemas/SearchKeywords'
+      responses:
+        '200':
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+    put:
+      tags:
+        - Project Tasks
+      summary: Create a new task
+      operationId: projects.tasks.create
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: 'Bad request, Validation error'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RfcError'
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedAnswer'
+
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: apiKey
+      in: header
+      scheme: bearer
+      name: X-Authorization
+
+  schemas:
+    TokenData:
+      type: object
+      properties:
+        token:
+          type: string
+          description: User JWT
+        refreshToken:
+          type: string
+          description: Refresh token used to renew user's token
+    UnauthorizedAnswer:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP error code
+          example: 401
+        message:
+          type: string
+          description: Information message
+          example: 'Invalid credentials'
+    RfcError:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+          description: 'Error title'
+          example: 'An error occurred'
+        status:
+          type: integer
+          description: 'Error status code'
+          example: 400
+        detail:
+          type: string
+          description: 'Error details'
+    ValidationErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 'Error status code'
+          example: 400
+        title:
+          type: string
+          description: 'Error title'
+          example: 'Validation failed'
+        errors:
+          $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            description: 'Current field error'
+            type: string
+        children:
+          type: object
+          description: 'Recursive field, each [fieldName] is a ValidationError'
+          properties:
+            fieldName:
+              $ref: '#/components/schemas/ValidationError'
+    UserRegistration:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - timeZone
+        - plainPassword
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          description: 'Must be unique'
+        timeZone:
+          type: string
+          description: 'User timezone with format GeoZone/City'
+        phoneNumber:
+          type: string
+          nullable: true
+          description: 'Phone number'
+        plainPassword:
+          type: string
+          format: password
+          description: 'User password'
+        roles:
+          $ref: '#/components/schemas/Roles'
+    SearchPage:
+      type: integer
+      description: 'Current page'
+      format: int32
+      minimum: 1
+      default: 1
+    SearchLimit:
+      type: integer
+      description: 'Max results per page'
+      format: int32
+      minimum: 0
+      maximum: 100
+      default: 10
+    SearchKeywords:
+      type: string
+      description: 'Keywords'
+    Project:
+      type: object
+      description: 'Project model'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Project id'
+        guid:
+          type: string
+          description: 'Project uuid'
+        name:
+          type: string
+          description: 'Project name'
+    Task:
+      type: object
+      description: 'Task model'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Task id'
+        name:
+          type: string
+          description: 'Task name'
+        description:
+          type: string
+          description: 'Task description'
+        archived:
+          type: boolean
+          default: false
+          description: 'True of task is archived'
+    Pagination:
+      type: object
+      description: 'Pagination variables'
+      properties:
+        last:
+          type: integer
+        current:
+          type: integer
+        numItemsPerPage:
+          type: integer
+        first:
+          type: integer
+        pageCount:
+          type: integer
+        totalCount:
+          type: integer
+        pageRange:
+          type: integer
+        startPage:
+          type: integer
+        endPage:
+          type: integer
+        next:
+          type: integer
+        pagesInRange:
+          type: array
+          items:
+            type: integer
+        firstPageInRange:
+          type: integer
+        lastPageInRange:
+          type: integer
+        currentItemCount:
+          type: integer
+        firstItemNumber:
+          type: integer
+        lastItemNumber:
+          type: integer
+    Roles:
+      description: |
+        Users roles
+        This field is writable only for admin
+
+        ROLE_USER = 1
+        ROLE_PROJECT_MANAGER = 2
+        ROLE_ADMIN = 128
+        ROLE_SUPER_ADMIN = 256
+      type: integer
+      format: int32
+      default: 1
+      enum:
+        - 1
+        - 2
+        - 128
+        - 256
