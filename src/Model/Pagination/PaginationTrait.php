@@ -20,7 +20,7 @@ trait PaginationTrait
 
     /**
      * @var int|null
-     * @Assert\GreaterThanOrEqual(0)
+     * @Assert\GreaterThan(0)
      * @Assert\LessThanOrEqual(100)
      */
     protected $limit = 10;
