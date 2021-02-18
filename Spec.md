@@ -35,7 +35,7 @@ Task
 ====
 Une tâche est liée au projet, elle peut être archivée
 
-
+Dans un cas d'un projet en régie si la factu est émise fin de mois, une tache peut encore recevoir des timers. Elle ne doit donc pas être archivée lorsqu'un facturation est émise mais elle doit avoir un méchanisme qui vient bloquer l'ajout de timer avant une période facturée.
 
 
 
