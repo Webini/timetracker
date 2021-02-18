@@ -2,7 +2,7 @@ Feature:
   As an admin / super admin i should be able to retrieve running timer from all users
   As an user / project manager admin i should get only my running timer
   As anon i can't do anything
-  As any allowed user i should get data with task name
+  As any allowed user i should get data with task name, description and id
 
   Background:
     Given a project saved in [project]
@@ -34,7 +34,7 @@ Feature:
     When i send a get on route api_users_timer_get
     Then the status code should be 401
 
-  Scenario: As any allowed user i should get data with task name
+  Scenario: As any allowed user i should get data with task name, description and id
     Given i am an user of type user
     Given an user [me] assigned to project [project] with permission none
     Given i have a running timer for task [task]
@@ -42,4 +42,6 @@ Feature:
     When i send a get on route api_users_timer_get
     Then the status code should be 200
     And the response item [task][name] should not be empty
+    And the response item [task][id] should not be empty
+    And the response item [task][description] should not be empty
 

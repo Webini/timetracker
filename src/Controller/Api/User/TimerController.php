@@ -69,7 +69,10 @@ class TimerController extends AbstractFOSRestController
         $this->em->persist($taskTimer);
         $this->em->flush();
 
-        return $this->view($taskTimer);
+        return $this
+            ->view($taskTimer)
+            ->setContext((new Context())->setAttribute('withTask', true))
+        ;
     }
 
     /**
