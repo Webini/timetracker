@@ -2,15 +2,16 @@
 
 namespace App\Entity;
 
+use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\TaskRepository;
 use App\Traits\BlameableEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Entity\TaskTimer;
 
 /**
  * @ORM\Entity(repositoryClass=TaskRepository::class)
@@ -63,6 +64,16 @@ class Task
      * @ORM\OneToMany(targetEntity=TaskTimer::class, mappedBy="task", orphanRemoval=true)
      */
     private $timers;
+
+    /**
+     * @var User|null
+     * @Groups({ "task_full", "task_short" })
+     * @SerializeIdentifier()
+     * @Gedmo\Blameable(on="create")
+     * @ORM\ManyToOne(targetEntity=User::class)
+     * @ORM\JoinColumn(name="created_by", referencedColumnName="id", onDelete="SET NULL")
+     */
+    private $createdBy;
 
     public function __construct()
     {

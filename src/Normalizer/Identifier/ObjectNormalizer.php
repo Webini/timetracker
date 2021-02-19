@@ -96,8 +96,10 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
 
         $this->identifierFieldsCache[$cacheKey] = [];
 
+        $className = $this->em->getClassMetadata(get_class($object))->name;
+
         // methods
-        $reflClass = new \ReflectionClass(get_class($object));
+        $reflClass = new \ReflectionClass($className);
 
         /** @var AttributeMetadata $attribute */
         foreach ($attributes as $attribute) {

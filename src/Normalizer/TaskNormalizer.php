@@ -5,15 +5,12 @@ namespace App\Normalizer;
 use App\Entity\Task;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\SerializerAwareInterface;
+use Symfony\Component\Serializer\SerializerAwareTrait;
 
-class TaskNormalizer implements NormalizerInterface
+class TaskNormalizer implements NormalizerInterface, SerializerAwareInterface
 {
-    private $normalizer;
-
-    public function __construct(ObjectNormalizer $normalizer)
-    {
-        $this->normalizer = $normalizer;
-    }
+    use SerializerAwareTrait;
 
     /**
      * @param mixed $object
@@ -22,7 +19,7 @@ class TaskNormalizer implements NormalizerInterface
      * @return array
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function normalize($object, string $format = null, array $context = array()): array
+    public function normalize($object, string $format = null, array $context = []): array
     {
         $context[self::class] = true;
 
@@ -30,13 +27,7 @@ class TaskNormalizer implements NormalizerInterface
             $context['groups'] = [ 'task_full' ];
         }
 
-        $data = $this->normalizer->normalize($object, $format, $context);
-
-        if ($object->getCreatedBy()) {
-            $data['createdBy'] = [ 'id' => $object->getCreatedBy()->getId() ];
-        }
-
-        return $data;
+        return $this->serializer->normalize($object, $format, $context);
     }
 
     /**

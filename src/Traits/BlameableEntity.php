@@ -5,6 +5,7 @@ namespace App\Traits;
 
 
 use App\Entity\User;
+use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 
@@ -12,6 +13,7 @@ trait BlameableEntity
 {
     /**
      * @var User|null
+     * @SerializeIdentifier()
      * @Gedmo\Blameable(on="create")
      * @ORM\ManyToOne(targetEntity=User::class)
      * @ORM\JoinColumn(name="created_by", referencedColumnName="id", onDelete="SET NULL")
