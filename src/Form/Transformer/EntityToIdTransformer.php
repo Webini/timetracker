@@ -38,13 +38,17 @@ class EntityToIdTransformer implements DataTransformerInterface
     /**
      * Transforms an id to an object.
      *
-     * @param string|int $id
+     * @param string|int|null $id
      *
      * @return object|null
      * @throws TransformationFailedException if object is not found
      */
     public function reverseTransform($id): ?object
     {
+        if (null === $id) {
+            return null;
+        }
+
         $identifier = current(array_values($this->em->getClassMetadata($this->entityName)->getIdentifier()));
 
         $object = $this->em

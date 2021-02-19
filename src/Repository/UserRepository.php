@@ -2,9 +2,11 @@
 
 namespace App\Repository;
 
+use App\Entity\Project;
 use App\Entity\User;
 use App\Model\UserSearch;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\Pagination\PaginationInterface;
@@ -42,6 +44,13 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('search', mb_strtolower($search->getSearch()))
                 ->orWhere('CONCAT(LOWER(u.firstName), \' \', LOWER(u.lastName)) LIKE :keyword')
                 ->setParameter('keyword', '%' . mb_strtolower($search->getSearch()) . '%')
+            ;
+        }
+
+        if ($search->getNotInProject() !== null) {
+            $qb
+                ->andWhere(':project NOT MEMBER OF u.assignedProjects')
+                ->setParameter('project', $search->getNotInProject())
             ;
         }
 

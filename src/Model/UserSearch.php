@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Entity\Project;
 use App\Model\Pagination\PaginationInterface;
 use App\Model\Pagination\PaginationTrait;
 
@@ -13,6 +14,11 @@ class UserSearch implements PaginationInterface
      * @var string|null
      */
     private $search;
+
+    /**
+     * @var Project|null
+     */
+    private $notInProject;
 
     /**
      * @return string|null
@@ -29,6 +35,24 @@ class UserSearch implements PaginationInterface
     public function setSearch(?string $search): self
     {
         $this->search = $search;
+        return $this;
+    }
+
+    /**
+     * @return Project|null
+     */
+    public function getNotInProject(): ?Project
+    {
+        return $this->notInProject;
+    }
+
+    /**
+     * @param Project|null $notInProject
+     * @return $this
+     */
+    public function setNotInProject(?Project $notInProject): self
+    {
+        $this->notInProject = $notInProject;
         return $this;
     }
 }

@@ -290,11 +290,34 @@ final class ApiContext implements Context
     }
 
     /**
-     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) (.+)$/
+     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) ((?!data in ).+)$/
      */
     public function theResponseItemShouldOrShouldNotBe(string $key, string $condition, string $assertExpr, string $expected): void
     {
         $expected = $this->jsonDecode($expected);
+
+        $content = $this->getResponseContent();
+        if (!$this->strictAccessor->isReadable($content, $key)) {
+            throw new \RuntimeException(sprintf(
+                'Cannot found element %s in response %s',
+                $key,
+                var_export($content, true)
+            ));
+        }
+
+        $value = $this->strictAccessor->getValue($content, $key);
+        $condition = strtolower($condition);
+
+        $assert = $this->strictAccessor->getValue(self::ASSERT_MAP, '[' . $condition . '][' . $assertExpr . ']');
+        Assert::$assert($expected, $value);
+    }
+
+    /**
+     * @Then /^the response item (\S+) (should|should not) (contains|be greater than|be greater than or equal to|be equal to|be less than|be less than or equal to|count) data in (.+)$/
+     */
+    public function theResponseItemShouldOrShouldNotBeData(string $key, string $condition, string $assertExpr, string $expectedKey): void
+    {
+        $expected = $this->strictAccessor->getValue($this->bucket, $expectedKey);
 
         $content = $this->getResponseContent();
         if (!$this->strictAccessor->isReadable($content, $key)) {

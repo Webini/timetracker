@@ -11,14 +11,12 @@ use App\Form\Type\BooleanType;
 use App\Model\TimerModel;
 use App\Traits\EntityManagerAwareTrait;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Validator\Constraints\NotBlank;
 
 class TimerModelType extends AbstractType
 {
@@ -56,7 +54,10 @@ class TimerModelType extends AbstractType
             ->add('minutes', NumberType::class)
             ->add('force', BooleanType::class)
             ->add('note', TextType::class)
-            ->add($builder->create('task', TextType::class)->addModelTransformer($taskTransformer))
+            ->add($builder
+                ->create('task', TextType::class)
+                ->addModelTransformer($taskTransformer)
+            )
         ;
     }
 

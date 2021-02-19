@@ -16,9 +16,9 @@ class ProjectSearchType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('page', IntegerType::class, [ 'required' => false ])
-            ->add('limit', IntegerType::class, [ 'required' => false ])
-            ->add('search', TextType::class, [ 'required' => false ])
+            ->add('page', IntegerType::class)
+            ->add('limit', IntegerType::class)
+            ->add('search', TextType::class)
         ;
     }
 
