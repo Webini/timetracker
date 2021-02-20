@@ -5,7 +5,7 @@ namespace App\Entity;
 use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\AssignedUserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
+use App\Traits\TimestampableEntity;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 

@@ -6,7 +6,7 @@ use App\Repository\TaskProviderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
+use App\Traits\TimestampableEntity;
 
 /**
  * @ORM\Entity(repositoryClass=TaskProviderRepository::class)

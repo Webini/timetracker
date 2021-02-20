@@ -6,7 +6,7 @@ use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\TaskTimerRepository;
 use App\Traits\BlameableEntity;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
+use App\Traits\TimestampableEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
