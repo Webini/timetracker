@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\AssignedUser;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Model\UserSearch;
@@ -49,7 +50,19 @@ class UserRepository extends ServiceEntityRepository
 
         if ($search->getNotInProject() !== null) {
             $qb
-                ->andWhere(':project NOT MEMBER OF u.assignedProjects')
+                ->andWhere(
+                    $qb->expr()->not($qb->expr()->exists(
+                        $this
+                            ->getEntityManager()
+                            ->getRepository(AssignedUser::class)
+                            ->createQueryBuilder('au')
+                            ->select('1')
+                            ->where('au.project = :project')
+                            ->andWhere('au.assigned = u')
+                            ->setMaxResults(1)
+                            ->getDQL()
+                    ))
+                )
                 ->setParameter('project', $search->getNotInProject())
             ;
         }

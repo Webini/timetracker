@@ -6,10 +6,20 @@ use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\AssignedUserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=AssignedUserRepository::class)
+ * @ORM\Table(
+ *   uniqueConstraints={
+ *     @ORM\UniqueConstraint(columns={"assigned_id", "project_id"})
+ *   }
+ * )
+ * @UniqueEntity(
+ *   fields={"assigned", "project"},
+ *   message="User already added project"
+ * )
  */
 class AssignedUser
 {

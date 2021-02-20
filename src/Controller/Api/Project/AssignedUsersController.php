@@ -46,12 +46,12 @@ class AssignedUsersController extends AbstractFOSRestController
     {
         $this->denyAccessUnlessGranted(AssignedUserVoter::ASSIGNED_USER_CREATE, $project);
 
-        $form = $this->createForm(AssignedUserType::class, null, [ 'creation' => true ]);
+        $assignedUser = new AssignedUser();
+        $assignedUser->setProject($project);
+        $form = $this->createForm(AssignedUserType::class, $assignedUser, [ 'creation' => true ]);
         $this->submitRequestContent($form, $request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var AssignedUser $assignedUser */
-            $assignedUser = $form->getData();
             $assignedUser = $this->assignedUserManager->create(
                 $project,
                 $assignedUser->getAssigned(),
