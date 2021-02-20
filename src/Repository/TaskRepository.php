@@ -80,10 +80,9 @@ class TaskRepository extends ServiceEntityRepository
         $query = $this->_em
             ->getRepository(TaskTimer::class)
             ->createQueryBuilder('tt')
-            ->select('GREATEST(t.updatedAt, t.createdAt, MAX(
+            ->select('GREATEST(t.createdAt, MAX(
                 GREATEST(
                     tt.startedAt,
-                    tt.updatedAt,
                     COALESCE(tt.stoppedAt, CURRENT_TIMESTAMP())
                 )
             ))')
