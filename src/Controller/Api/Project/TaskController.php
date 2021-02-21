@@ -8,6 +8,7 @@ use App\Controller\Api\SubmitFormTrait;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\TaskTimer;
+use App\Entity\User;
 use App\Form\Entity\TaskType;
 use App\Form\Model\TaskSearchType;
 use App\Manager\AssignedUserManager;
@@ -147,12 +148,19 @@ class TaskController extends AbstractFOSRestController
      */
     private function generateView($output, $tasks): View
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $timersRepo = $this->em->getRepository(TaskTimer::class);
+        $timers = $timersRepo->findTimeSpent(
+            $tasks,
+            $user->hasOneRole(User::ROLE_PROJECT_MANAGER | User::ROLE_ADMIN | User::ROLE_SUPER_ADMIN)
+                ? NULL
+                : $user
+        );
+
         return $this
             ->view($output)
-            ->setContext((new Context())->setAttribute(
-                'timers', $timersRepo->findTimeSpent($tasks)
-            ))
+            ->setContext((new Context())->setAttribute('timers', $timers))
         ;
     }
 }

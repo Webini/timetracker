@@ -37,6 +37,8 @@ class Task
     private $externalId;
 
     /**
+     * @Groups({ "task_full", "task_short" })
+     * @SerializeIdentifier()
      * @ORM\ManyToOne(targetEntity=Project::class, inversedBy="tasks")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -59,7 +61,7 @@ class Task
      * @ORM\Column(type="boolean", options={"default": false})
      * @Groups({ "task_full" })
      */
-    private $archived = false;
+    private $archived;
 
     /**
      * @ORM\OneToMany(targetEntity=TaskTimer::class, mappedBy="task", orphanRemoval=true)

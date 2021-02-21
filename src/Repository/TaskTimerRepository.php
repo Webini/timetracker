@@ -55,11 +55,9 @@ class TaskTimerRepository extends ServiceEntityRepository
             throw new \Exception('You must set DateTime $from and DateTime $to parameters');
         }
 
+        $marker = new \DateTime('0001-01-01');
         $qb = $this
             ->createQueryBuilder('rtt')
-//            ->getEntityManager()
-//            ->createQueryBuilder()
-//            ->from(TaskTimer::class, 'rtt')
             ->select('IDENTITY(rtt.task) as task')
             ->addSelect('IDENTITY(rtt.owner) as owner')
             ->addSelect('(' .
@@ -74,10 +72,7 @@ class TaskTimerRepository extends ServiceEntityRepository
                     ->getDQL()
                 . ') as runningTimerStartedAt'
             )
-//            ->leftJoin('rtt.owner', 'owner')
-//            ->select('IDENTITY(rtt.task)')
-//            ->addSelect('(CASE WHEN MIN(rtt.stoppedAt) IS NULL THEN true ELSE false END) as hasRunningTimer')
-//            ->addSelect('(CASE WHEN MIN(rtt.stoppedAt) IS NULL THEN rtt.started_at ELSE NULL END) as runningStartedAt')
+//            ->addSelect('(CASE WHEN MAX(COALESCE(rtt.stoppedAt, CURRENT_TIMESTAMP())) = CURRENT_TIMESTAMP() THEN true ELSE false END) as runningTimer')
             ->groupBy('rtt.task, rtt.owner')
         ;
 
@@ -98,12 +93,8 @@ class TaskTimerRepository extends ServiceEntityRepository
 //            $qb->addSelect('EXTRACT(epoch FROM SUM(COALESCE(rtt.stoppedAt, CURRENT_TIMESTAMP()) - rtt.startedAt)) as duration');
 //        }
 
-        $qb
-            ->addSelect('EXTRACT(epoch FROM SUM(COALESCE(rtt.stoppedAt, rtt.startedAt) - rtt.startedAt)) as duration')
-//            ->andWhere('rtt.startedAt IS NOT NULL')
-//            ->andWhere('rtt.stoppedAt IS NOT NULL')
-        ;
-
+        // we set duration from stopped timers only
+        $qb->addSelect('EXTRACT(epoch FROM SUM(COALESCE(rtt.stoppedAt, rtt.startedAt) - rtt.startedAt)) as duration');
         if ($from && $to) {
             $qb
                 ->andWhere(':from <= COALESCE(rtt.stoppedAt, CURRENT_TIMESTAMP()) and :to >= rtt.startedAt')
@@ -125,6 +116,8 @@ class TaskTimerRepository extends ServiceEntityRepository
                 ->setParameter('tasks', $tasks)
             ;
         }
+
+        $qb->addOrderBy('duration', 'DESC');
 
         return $qb;
     }
@@ -180,33 +173,4 @@ class TaskTimerRepository extends ServiceEntityRepository
 
         return $tta;
     }
-
-    // /**
-    //  * @return TaskTimer[] Returns an array of TaskTimer objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('t.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?TaskTimer
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }
