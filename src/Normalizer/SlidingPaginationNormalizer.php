@@ -39,7 +39,7 @@ class SlidingPaginationNormalizer implements NormalizerInterface, SerializerAwar
 
         $context[self::class] = true;
 
-        $data = $this->serializer->normalize($object, $format, $context);
+        $data = $this->serializer->normalize($object->getItems(), $format, $context);
 
         return [
             'data' => $data,

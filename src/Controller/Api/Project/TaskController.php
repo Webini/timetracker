@@ -7,6 +7,7 @@ namespace App\Controller\Api\Project;
 use App\Controller\Api\SubmitFormTrait;
 use App\Entity\Project;
 use App\Entity\Task;
+use App\Entity\TaskTimer;
 use App\Form\Entity\TaskType;
 use App\Form\Model\TaskSearchType;
 use App\Manager\AssignedUserManager;
@@ -14,6 +15,7 @@ use App\Manager\TaskManager;
 use App\Security\Voter\ProjectVoter;
 use App\Security\Voter\TaskVoter;
 use App\Traits\EntityManagerAwareTrait;
+use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
@@ -64,7 +66,7 @@ class TaskController extends AbstractFOSRestController
             $this->em->persist($task);
             $this->em->flush();
 
-            return $this->view($task);
+            return $this->generateView($task, $task);
         }
 
         return $this->view($form);
@@ -85,7 +87,7 @@ class TaskController extends AbstractFOSRestController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
-            return $this->view($task);
+            return $this->generateView($task, $task);
         }
 
         return $this->view($form);
@@ -99,7 +101,7 @@ class TaskController extends AbstractFOSRestController
     public function getOne(Task $task): View
     {
         $this->denyAccessUnlessGranted(TaskVoter::TASK_READ, $task);
-        return $this->view($task);
+        return $this->generateView($task, $task);
     }
 
     /**
@@ -116,9 +118,8 @@ class TaskController extends AbstractFOSRestController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $tasksRepo = $this->em->getRepository(Task::class);
-            return $this->view(
-                $tasksRepo->searchPaginated($project, $form->getData())
-            );
+            $results = $tasksRepo->searchPaginated($project, $form->getData());
+            return $this->generateView($results, $results->getItems());
         }
 
         return $this->view($form);
@@ -137,5 +138,21 @@ class TaskController extends AbstractFOSRestController
         $this->em->remove($task);
         $this->em->flush();
         return $this->view(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @param $output
+     * @param Tasks[]|\Traversable $tasks
+     * @return View
+     */
+    private function generateView($output, $tasks): View
+    {
+        $timersRepo = $this->em->getRepository(TaskTimer::class);
+        return $this
+            ->view($output)
+            ->setContext((new Context())->setAttribute(
+                'timers', $timersRepo->findTimeSpent($tasks)
+            ))
+        ;
     }
 }

@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\ManyToMany;
 use Doctrine\ORM\Mapping\OneToMany;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
+use Symfony\Component\Serializer\Exception\LogicException;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorResolverInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
@@ -94,12 +95,18 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
             return $this->identifierFieldsCache[$cacheKey];
         }
 
-        $this->identifierFieldsCache[$cacheKey] = [];
+        $fields = [];
 
-        $className = $this->em->getClassMetadata(get_class($object))->name;
+        $isHandledByEm = $this->em->contains($object);
+        $className = $isHandledByEm
+            ? $this->em->getClassMetadata(get_class($object))->name
+            : get_class($object)
+        ;
 
-        // methods
-        $reflClass = new \ReflectionClass($className);
+        $reflClass = $this->classMetadataFactory
+            ->getMetadataFor($className)
+            ->getReflectionClass()
+        ;
 
         /** @var AttributeMetadata $attribute */
         foreach ($attributes as $attribute) {
@@ -111,18 +118,27 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
                 continue;
             }
 
-            $identifierType = $this->getIdentifierType($property);
-            $this->identifierFieldsCache[$cacheKey][$name] = $identifierType;
+            if ($isHandledByEm) {
+                $identifierType = $this->getEntityIdentifierType($property);
+                $fields[$name] = $identifierType;
+            } else {
+                $fields[$name] = $this->getObjectIdentifierType($property, $object, $isHandledByEm);
+            }
         }
 
+        if (!$isHandledByEm) {
+            return $fields;
+        }
+
+        $this->identifierFieldsCache[$cacheKey] = $fields;
         return $this->identifierFieldsCache[$cacheKey];
     }
 
     /**
      * @param \ReflectionProperty $property
-     * @return int self::IS_*
+     * @return int self::IS_
      */
-    private function getIdentifierType(\ReflectionProperty $property): int
+    private function getEntityIdentifierType(\ReflectionProperty $property): int
     {
         $isMany = (
             !empty($this->reader->getPropertyAnnotation($property, OneToMany::class)) ||
@@ -130,6 +146,22 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
         );
 
         return $isMany ? self::IS_MANY : self::IS_ONE;
+    }
+
+    /**
+     * @param \ReflectionProperty $property
+     * @param $object
+     * @param bool $isHandledByEm
+     * @return int
+     */
+    private function getObjectIdentifierType(\ReflectionProperty $property, $object, bool $isHandledByEm): int
+    {
+        $data = $this->propertyAccessor->getValue($object, $property->getName());
+        if (is_array($data) || $data instanceof \Traversable) {
+            return self::IS_MANY;
+        }
+
+        return self::IS_ONE;
     }
 
     /**
@@ -142,7 +174,13 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
      */
     public function normalize($object, string $format = null, array $context = [])
     {
+        if (!$this->serializer instanceof NormalizerInterface) {
+            throw new LogicException(sprintf('Cannot normalize object "%s" because the injected serializer is not a normalizer', $object));
+        }
+
+        $context[self::class] = true;
         $identifiers = $this->getIdentifierFields($object, $context);
+
         foreach ($identifiers as $name => $type) {
             if (isset($context[self::CALLBACKS][$name])) {
                 continue;
@@ -154,7 +192,10 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
             ];
         }
 
-        return parent::normalize($object, $format, $context);
+        if ($this->em->contains($object)) {
+            return parent::normalize($object, $format, $context);
+        }
+        return $this->serializer->normalize($object, $format, $context);
     }
 
     /**
@@ -174,7 +215,7 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
 
         $output = [];
         $uof = $this->em->getUnitOfWork();
-        $identifiers = $uof->getEntityIdentifier($object);
+        $identifiers = $uof->getEntityIdentifier($value);
 
         foreach ($identifiers as $name => $value) {
             $output[$name] = $value;
@@ -225,15 +266,15 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
     /**
      * @param mixed $data
      * @param string|null $format
+     * @param array $context
      * @return bool
      */
-    public function supportsNormalization($data, string $format = null)
+    public function supportsNormalization($data, string $format = null, array $context = []): bool
     {
-        if (!parent::supportsNormalization($data, $format)) {
+        if (isset($context[self::class])) {
             return false;
         }
-
-        return $this->em->contains($data);
+        return parent::supportsNormalization($data, $format);
     }
 
     /**
@@ -242,7 +283,7 @@ class ObjectNormalizer extends SymfonyObjectNormalizer implements NormalizerInte
      * @param string|null $format
      * @return bool
      */
-    public function supportsDenormalization($data, string $type, string $format = null)
+    public function supportsDenormalization($data, string $type, string $format = null): bool
     {
         return false;
     }

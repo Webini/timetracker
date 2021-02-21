@@ -7,6 +7,7 @@ use App\Entity\Task;
 use App\Entity\TaskTimer;
 use App\Model\TaskSearch;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
@@ -58,11 +59,14 @@ class TaskRepository extends ServiceEntityRepository
      * @param Project $project
      * @param TaskSearch $search
      * @return QueryBuilder
+     * @throws \Exception
      */
-    private function searchTasksQuery(Project $project, TaskSearch $search): QueryBuilder
+    public function createSearchTasksQuery(Project $project, TaskSearch $search): QueryBuilder
     {
-        $qb = $this
-            ->createQueryBuilder('t')
+        $taskTimerRepo = $this->getEntityManager()->getRepository(TaskTimer::class);
+
+        $qb = $this->
+            createQueryBuilder('t')
             ->select('t as entity')
             ->where('t.project = :project')
             ->setParameter('project', $project)
@@ -77,8 +81,7 @@ class TaskRepository extends ServiceEntityRepository
         }
 
         // order by last timers / or task modification
-        $query = $this->_em
-            ->getRepository(TaskTimer::class)
+        $query = $taskTimerRepo
             ->createQueryBuilder('tt')
             ->select('GREATEST(t.createdAt, MAX(
                 GREATEST(
@@ -99,11 +102,12 @@ class TaskRepository extends ServiceEntityRepository
      * @param Project $project
      * @param TaskSearch $search
      * @return \Knp\Component\Pager\Pagination\PaginationInterface
+     * @throws \Exception
      */
     public function searchPaginated(Project $project, TaskSearch $search)
     {
         $paginated = $this->paginator->paginate(
-            $this->searchTasksQuery($project, $search),
+            $this->createSearchTasksQuery($project, $search),
             $search->getPage(),
             $search->getLimit()
         );

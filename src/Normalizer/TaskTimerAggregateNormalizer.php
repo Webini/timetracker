@@ -3,15 +3,11 @@
 namespace App\Normalizer;
 
 use App\DTO\TaskTimerAggregate;
-use App\Entity\Task;
-use App\Entity\TaskTimer;
-use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerAwareTrait;
 
-class TaskNormalizer implements NormalizerInterface, SerializerAwareInterface
+class TaskTimerAggregateNormalizer implements NormalizerInterface, SerializerAwareInterface
 {
     use SerializerAwareTrait;
 
@@ -25,21 +21,12 @@ class TaskNormalizer implements NormalizerInterface, SerializerAwareInterface
     public function normalize($object, string $format = null, array $context = []): array
     {
         $context[self::class] = true;
-        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY] = [ 'timers' ];
 
         if (empty($context['groups'])) {
-            $context['groups'] = [ 'task_full' ];
+            $context['groups'] = [ 'task_timer_aggregate_full' ];
         }
 
-        $data = $this->serializer->normalize($object, $format, $context);
-        if (isset($context['timers'])) {
-            $timers = array_values(array_filter($context['timers'], function(TaskTimerAggregate $timer) use ($object) {
-                return $timer->getTask()->getId() === $object->getId();
-            }));
-            $data['timers'] = $this->serializer->normalize($timers, $format);
-        }
-
-        return $data;
+        return $this->serializer->normalize($object, $format, $context);
     }
 
     /**
@@ -54,6 +41,6 @@ class TaskNormalizer implements NormalizerInterface, SerializerAwareInterface
             return false;
         }
 
-        return $data instanceof Task;
+        return $data instanceof TaskTimerAggregate;
     }
 }

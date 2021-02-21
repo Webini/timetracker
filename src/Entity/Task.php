@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\DTO\TaskTimerAggregate;
 use App\Normalizer\Identifier\Annotation\SerializeIdentifier;
 use App\Repository\TaskRepository;
 use App\Traits\BlameableEntity;
@@ -75,8 +76,15 @@ class Task
      */
     private $createdBy;
 
+    /**
+     * @Groups({ "task_full", "task_short" })
+     * @var TaskTimerAggregate[]
+     */
+    private $timerAggregates;
+
     public function __construct()
     {
+        $this->timerAggregates = null;
         $this->timers = new ArrayCollection();
         $this->archived = false;
     }
@@ -174,6 +182,24 @@ class Task
     {
         $this->description = $description;
 
+        return $this;
+    }
+
+    /**
+     * @return TaskTimerAggregate[]
+     */
+    public function getTimerAggregates(): ?array
+    {
+        return $this->timerAggregates;
+    }
+
+    /**
+     * @param TaskTimerAggregate[] $timerAggregates
+     * @return $this
+     */
+    public function setTimerAggregates(?array $timerAggregates): self
+    {
+        $this->timerAggregates = $timerAggregates;
         return $this;
     }
 }

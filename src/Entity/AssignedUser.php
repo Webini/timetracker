@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
  * )
  * @UniqueEntity(
  *   fields={"assigned", "project"},
- *   message="User already added project"
+ *   message="User already added in project"
  * )
  */
 class AssignedUser

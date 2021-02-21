@@ -135,7 +135,6 @@ class User implements \Serializable, UserInterface
     {
         return serialize(array(
             $this->id,
-            $this->email,
         ));
     }
 
@@ -147,7 +146,6 @@ class User implements \Serializable, UserInterface
     {
         list (
             $this->id,
-            $this->email,
         ) = unserialize($serialized);
     }
 
